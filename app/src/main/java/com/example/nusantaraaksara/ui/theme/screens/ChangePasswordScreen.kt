@@ -105,25 +105,28 @@ fun PasswordField(
     visible: Boolean,
     onToggleVisibility: () -> Unit
 ) {
-    OutlinedTextField(
-        value = value,
-        onValueChange = onValueChange,
-        label = { Text(label) },
-        modifier = Modifier.fillMaxWidth(),
-        leadingIcon = { Icon(Icons.Default.Lock, contentDescription = null, tint = BrownDusk) },
-        trailingIcon = {
-            IconButton(onClick = onToggleVisibility) {
-                Icon(
-                    imageVector = if (visible) Icons.Default.Visibility else Icons.Default.VisibilityOff,
-                    contentDescription = null
-                )
-            }
-        },
-        visualTransformation = if (visible) VisualTransformation.None else PasswordVisualTransformation(),
-        shape = RoundedCornerShape(12.dp),
-        colors = OutlinedTextFieldDefaults.colors(
-            focusedBorderColor = GoldenHeritage,
-            unfocusedBorderColor = Color.LightGray
+    Column(modifier = Modifier.padding(vertical = 8.dp)) {
+        Text(
+            text = label,
+            fontSize = 14.sp,
+            fontWeight = FontWeight.Bold,
+            color = BrownDusk,
+            modifier = Modifier.padding(start = 4.dp, bottom = 8.dp)
         )
-    )
+        OutlinedTextField(
+            value = value,
+            onValueChange = onValueChange,
+            modifier = Modifier.fillMaxWidth(),
+            // Hilangkan label di dalam untuk rupa yang lebih minimalis
+            placeholder = { Text("Masukkan $label", color = Color.LightGray) },
+            leadingIcon = { Icon(Icons.Default.Lock, null, tint = BrownDusk) },
+            shape = RoundedCornerShape(16.dp),
+            colors = OutlinedTextFieldDefaults.colors(
+                focusedBorderColor = GoldenHeritage,
+                unfocusedBorderColor = Color(0xFFEEEEEE),
+                focusedContainerColor = Color(0xFFFBFBFB),
+                unfocusedContainerColor = Color.White
+            )
+        )
+    }
 }

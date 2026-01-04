@@ -63,40 +63,54 @@ fun TransliterasiScreen(viewModel: AksaraViewModel, onBack: () -> Unit) {
         Font(R.font.poppins_medium, FontWeight.Medium)
     )
 
-    Scaffold(
-        // Menggunakan topBar agar header benar-benar di atas dan rapi
-        topBar = {
-            Surface(
-                modifier = Modifier.fillMaxWidth().height(100.dp),
-                color = BrownDusk,
-                shape = RoundedCornerShape(bottomStart = 30.dp, bottomEnd = 30.dp),
-                shadowElevation = 8.dp
+    // Gunakan Box agar Header bisa Full mepet ke atas
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(Color(0xFFFBFBFB))
+    ) {
+        // --- 1. HEADER (Mepet ke Atas & Teks Proporsional) ---
+        Surface(
+            modifier = Modifier.fillMaxWidth().height(140.dp),
+            color = BrownDusk,
+            shape = RoundedCornerShape(bottomStart = 32.dp, bottomEnd = 32.dp),
+            shadowElevation = 8.dp
+        ) {
+            // FIX PADDING MERAH: Pastikan tidak ada parameter 'horizontal' jika memakai 'top' secara manual di fungsi yang sama
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(start = 24.dp, end = 24.dp, top = 48.dp), // Gunakan start/end menggantikan horizontal
+                contentAlignment = Alignment.TopStart
             ) {
-                Box(
-                    modifier = Modifier.fillMaxSize().padding(horizontal = 24.dp),
-                    contentAlignment = Alignment.CenterStart
-                ) {
-                    Text(
-                        text = "Transliterasi",
-                        color = Color.White,
-                        fontSize = 22.sp,
-                        fontFamily = Poppins,
-                        fontWeight = FontWeight.Bold
-                    )
-                }
+                Text(
+                    text = "Transliterasi.", // Teks baru yang lebih elegan
+                    color = Color.White,
+                    fontSize = 24.sp,
+                    fontFamily = Poppins,
+                    fontWeight = FontWeight.Bold
+                )
             }
         }
-    ) { innerPadding ->
+
+        // --- 2. KONTEN UTAMA ---
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .background(Color(0xFFFBFBFB))
-                .padding(innerPadding) // Menghilangkan space putih liar
-                .padding(24.dp)
+                .padding(horizontal = 24.dp)
                 .verticalScroll(rememberScrollState())
         ) {
-            Text("Pilih Aksara Target", fontFamily = Poppins, fontWeight = FontWeight.Bold, color = BrownDusk)
-            Spacer(modifier = Modifier.height(8.dp))
+            // Spacer ini penting agar konten tidak tertutup Header cokelat
+            Spacer(modifier = Modifier.height(160.dp))
+
+            Text(
+                text = "Pilih Aksara Target",
+                fontFamily = Poppins,
+                fontWeight = FontWeight.Bold,
+                color = BrownDusk,
+                fontSize = 15.sp
+            )
+            Spacer(modifier = Modifier.height(10.dp))
 
             AksaraDropdown(
                 options = listAksara,
@@ -109,8 +123,14 @@ fun TransliterasiScreen(viewModel: AksaraViewModel, onBack: () -> Unit) {
 
             Spacer(modifier = Modifier.height(24.dp))
 
-            Text("Teks Latin", fontFamily = Poppins, fontWeight = FontWeight.Bold, color = BrownDusk)
-            Spacer(modifier = Modifier.height(8.dp))
+            Text(
+                text = "Teks Latin",
+                fontFamily = Poppins,
+                fontWeight = FontWeight.Bold,
+                color = BrownDusk,
+                fontSize = 15.sp
+            )
+            Spacer(modifier = Modifier.height(10.dp))
 
             OutlinedTextField(
                 value = inputText,
@@ -118,44 +138,56 @@ fun TransliterasiScreen(viewModel: AksaraViewModel, onBack: () -> Unit) {
                     inputText = it
                     viewModel.konversiTeks(it, selectedAksara?.id ?: 1)
                 },
-                placeholder = { Text("Ketik di sini...", color = Color.Gray) },
+                placeholder = { Text("Ketik kata di sini...", color = Color.Gray, fontFamily = Poppins) },
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(16.dp),
-                // FIX GARIS MERAH: Gunakan OutlinedTextFieldDefaults.colors
+                // FIX GARIS MERAH: Menggunakan OutlinedTextFieldDefaults.colors()
                 colors = OutlinedTextFieldDefaults.colors(
                     focusedBorderColor = BrownDusk,
                     unfocusedBorderColor = Color.LightGray,
                     focusedContainerColor = Color.White,
-                    unfocusedContainerColor = Color.White
-                )
+                    unfocusedContainerColor = Color.White,
+                    cursorColor = BrownDusk
+                ),
+                textStyle = TextStyle(fontFamily = Poppins, fontSize = 16.sp)
             )
 
-            Spacer(modifier = Modifier.height(32.dp))
+            Spacer(modifier = Modifier.height(30.dp))
 
             Text(
                 text = "Hasil (${selectedAksara?.nama ?: "Aksara"})",
                 fontFamily = Poppins,
-                fontWeight = FontWeight.Bold,
-                color = BrownDusk
+                fontWeight = FontWeight.ExtraBold,
+                color = BrownDusk,
+                fontSize = 15.sp
             )
             Spacer(modifier = Modifier.height(12.dp))
 
             Card(
-                modifier = Modifier.fillMaxWidth().height(180.dp),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(200.dp),
                 shape = RoundedCornerShape(24.dp),
                 colors = CardDefaults.cardColors(containerColor = Color.White),
                 elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
             ) {
-                Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxSize().padding(20.dp)) {
+                Box(
+                    contentAlignment = Alignment.Center,
+                    modifier = Modifier.fillMaxSize().padding(20.dp)
+                ) {
                     Text(
-                        text = hasil.ifEmpty { "Hasil muncul di sini" },
-                        fontSize = if (hasil.isEmpty()) 14.sp else 32.sp,
+                        text = hasil.ifEmpty { "Ketuk teks latin untuk konversi" },
+                        fontSize = if (hasil.isEmpty()) 14.sp else 34.sp,
                         color = if (hasil.isEmpty()) Color.LightGray else BrownDusk,
                         fontFamily = Poppins,
-                        textAlign = TextAlign.Center
+                        textAlign = TextAlign.Center,
+                        lineHeight = 45.sp
                     )
                 }
             }
+
+            // Jarak tambahan agar tidak mentok di bawah
+            Spacer(modifier = Modifier.height(120.dp))
         }
     }
 }

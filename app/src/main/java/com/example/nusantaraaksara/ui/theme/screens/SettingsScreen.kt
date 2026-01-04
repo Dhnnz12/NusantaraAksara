@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -122,20 +123,45 @@ fun SettingsScreen(
 @Composable
 fun SettingRow(title: String, icon: ImageVector, onClick: () -> Unit) {
     Surface(
-        onClick = onClick, // Sekarang Surface bisa merespon klik
-        shape = RoundedCornerShape(16.dp),
+        onClick = onClick,
+        shape = RoundedCornerShape(20.dp), // Lebih bulat
         color = Color.White,
-        border = BorderStroke(1.dp, Color(0xFFEEEEEE)),
-        modifier = Modifier.fillMaxWidth()
+        shadowElevation = 2.dp, // Tambah sedikit bayangan
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 4.dp)
     ) {
         Row(
-            modifier = Modifier.padding(18.dp),
+            modifier = Modifier.padding(20.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Icon(icon, contentDescription = null, tint = GoldenHeritage)
+            // Ikon dalam kotak warna lembut
+            Surface(
+                color = GoldenHeritage.copy(alpha = 0.1f),
+                shape = RoundedCornerShape(12.dp),
+                modifier = Modifier.size(44.dp)
+            ) {
+                Icon(
+                    icon,
+                    contentDescription = null,
+                    tint = GoldenHeritage,
+                    modifier = Modifier.padding(10.dp)
+                )
+            }
             Spacer(modifier = Modifier.width(16.dp))
-            Text(title, modifier = Modifier.weight(1f), fontWeight = FontWeight.Medium)
-            Icon(Icons.Default.ChevronRight, contentDescription = null, tint = Color.LightGray)
+            Text(
+                text = title,
+                modifier = Modifier.weight(1f),
+                fontWeight = FontWeight.SemiBold,
+                fontSize = 15.sp,
+                color = BrownDusk
+            )
+            Icon(
+                imageVector = Icons.Default.ChevronRight,
+                contentDescription = null,
+                tint = Color.LightGray,
+                modifier = Modifier.size(20.dp)
+            )
         }
     }
 }
