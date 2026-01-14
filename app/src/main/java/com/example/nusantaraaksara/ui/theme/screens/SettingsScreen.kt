@@ -1,38 +1,13 @@
 package com.example.nusantaraaksara.ui.theme.screens
 
-import androidx.compose.foundation.BorderStroke
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ExitToApp
-import androidx.compose.material.icons.filled.ArrowBack
-import androidx.compose.material.icons.filled.ChevronRight
-import androidx.compose.material.icons.filled.Edit
-import androidx.compose.material.icons.filled.ExitToApp
-import androidx.compose.material.icons.filled.Help
-import androidx.compose.material.icons.filled.Info
-import androidx.compose.material.icons.filled.Lock
-import androidx.compose.material.icons.filled.Person
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.CenterAlignedTopAppBar
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBarDefaults
-import androidx.compose.runtime.Composable
+import androidx.compose.material.icons.filled.*
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -41,26 +16,33 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
-import com.example.nusantaraaksara.ui.theme.BrownDusk
-import com.example.nusantaraaksara.ui.theme.GoldenHeritage
+import com.example.nusantaraaksara.ui.theme.*
+import com.example.nusantaraaksara.ui.theme.utils.EnglishStrings
+import com.example.nusantaraaksara.ui.theme.utils.IndonesiaStrings
 import com.example.nusantaraaksara.ui.theme.viewmodel.AuthViewModel
-
-
+import com.example.nusantaraaksara.ui.theme.viewmodel.SettingsViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SettingsScreen(
     navController: NavController,
     onLogout: () -> Unit,
-    viewModel: AuthViewModel
+    authViewModel: AuthViewModel,
+    settingsViewModel: SettingsViewModel
 ) {
+    val isDark by settingsViewModel.isDarkMode.collectAsState()
+    val currentLang by settingsViewModel.language.collectAsState()
+
+    // Pilih kamus bahasa (REQ-3.3.1)
+    val strings = if (currentLang == "id") IndonesiaStrings else EnglishStrings
+
     Scaffold(
         topBar = {
             CenterAlignedTopAppBar(
-                title = { Text("Pengaturan", fontWeight = FontWeight.Bold, color = Color.White) },
+                title = { Text(strings.settingsTitle, fontWeight = FontWeight.Bold, color = Color.White) },
                 navigationIcon = {
                     IconButton(onClick = { navController.popBackStack() }) {
-                        Icon(Icons.Default.ArrowBack, contentDescription = "Kembali", tint = Color.White)
+                        Icon(Icons.Default.ArrowBack, null, tint = Color.White)
                     }
                 },
                 colors = TopAppBarDefaults.centerAlignedTopAppBarColors(containerColor = BrownDusk)
@@ -71,82 +53,80 @@ fun SettingsScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(padding)
-                .padding(20.dp),
+                .padding(horizontal = 20.dp)
+                .verticalScroll(rememberScrollState()),
             verticalArrangement = Arrangement.spacedBy(10.dp)
         ) {
-            Text("Akun", fontWeight = FontWeight.Bold, color = BrownDusk, fontSize = 14.sp)
+            Spacer(modifier = Modifier.height(10.dp))
 
+            // --- SEKSI AKUN ---
+            Text(strings.accountSection, fontWeight = FontWeight.Bold, color = if(isDark) GoldenHeritage else BrownDusk, fontSize = 14.sp)
+            SettingRow(title = strings.profile, icon = Icons.Default.Person, isDark = isDark, onClick = { navController.navigate("profile") })
+            SettingRow(title = strings.changePassword, icon = Icons.Default.Lock, isDark = isDark, onClick = { navController.navigate("change_password") })
+
+            Spacer(modifier = Modifier.height(10.dp))
+
+            // --- SEKSI PREFERENSI (REQ-3.3.1 - 3.3.4) ---
+            Text(strings.preferenceSection, fontWeight = FontWeight.Bold, color = if(isDark) GoldenHeritage else BrownDusk, fontSize = 14.sp)
             SettingRow(
-                title = "Lihat Profil",
-                icon = Icons.Default.Person,
-                onClick = { navController.navigate("profile") } // Rute profil
+                title = "${strings.language}: ${if (currentLang == "id") "Indonesia" else "English"}",
+                icon = Icons.Default.Language,
+                isDark = isDark,
+                onClick = { settingsViewModel.changeLanguage(if (currentLang == "id") "en" else "id") }
             )
-
             SettingRow(
-                title = "Ganti Kata Sandi",
-                icon = Icons.Default.Lock,
-                onClick = { navController.navigate("change_password") } // Rute ganti sandi
+                title = "${strings.theme}: ${if (isDark) "Dark" else "Light"}",
+                icon = if (isDark) Icons.Default.DarkMode else Icons.Default.LightMode,
+                isDark = isDark,
+                onClick = { settingsViewModel.toggleTheme(!isDark) }
             )
+            SettingRow(title = strings.reset, icon = Icons.Default.Refresh, isDark = isDark, onClick = { settingsViewModel.resetDefaults() })
 
-            Spacer(modifier = Modifier.height(16.dp))
-            Text("Aplikasi", fontWeight = FontWeight.Bold, color = BrownDusk, fontSize = 14.sp)
+            Spacer(modifier = Modifier.height(10.dp))
 
-            SettingRow(
-                title = "Tentang Nusantara Aksara",
-                icon = Icons.Default.Info,
-                onClick = { navController.navigate("about") } // Rute tentang
-            )
+            // --- SEKSI APLIKASI (MENU YANG DIKEMBALIKAN) ---
+            Text(strings.appSection, fontWeight = FontWeight.Bold, color = if(isDark) GoldenHeritage else BrownDusk, fontSize = 14.sp)
+            SettingRow(title = strings.about, icon = Icons.Default.Info, isDark = isDark, onClick = { navController.navigate("about") })
+            SettingRow(title = strings.help, icon = Icons.Default.Help, isDark = isDark, onClick = { navController.navigate("help_faq") })
 
-            SettingRow(
-                title = "Bantuan & FAQ",
-                icon = Icons.Default.Help,
-                onClick = { navController.navigate("help_faq") } // Rute FAQ
-            )
+            Spacer(modifier = Modifier.height(30.dp))
 
-            Spacer(modifier = Modifier.weight(1f))
-
-            // Tombol Logout dengan konfirmasi (REQ-2.2)
+            // Tombol Logout
             Button(
                 onClick = onLogout,
                 modifier = Modifier.fillMaxWidth().height(56.dp),
                 colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFD32F2F)),
                 shape = RoundedCornerShape(16.dp)
             ) {
-                Icon(Icons.Default.ExitToApp, contentDescription = null)
+                Icon(Icons.Default.ExitToApp, null, tint = Color.White)
                 Spacer(modifier = Modifier.width(8.dp))
-                Text("Keluar dari Aplikasi", fontWeight = FontWeight.Bold)
+                Text(strings.logout, fontWeight = FontWeight.Bold, color = Color.White)
             }
+
+            Spacer(modifier = Modifier.height(20.dp))
         }
     }
 }
 
 @Composable
-fun SettingRow(title: String, icon: ImageVector, onClick: () -> Unit) {
+fun SettingRow(title: String, icon: ImageVector, isDark: Boolean, onClick: () -> Unit) {
     Surface(
         onClick = onClick,
-        shape = RoundedCornerShape(20.dp), // Lebih bulat
-        color = Color.White,
-        shadowElevation = 2.dp, // Tambah sedikit bayangan
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(vertical = 4.dp)
+        shape = RoundedCornerShape(20.dp),
+        color = if (isDark) Color(0xFF252525) else Color.White,
+        shadowElevation = if (isDark) 0.dp else 2.dp,
+        modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp)
     ) {
         Row(
-            modifier = Modifier.padding(20.dp),
+            modifier = Modifier.padding(16.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            // Ikon dalam kotak warna lembut
             Surface(
                 color = GoldenHeritage.copy(alpha = 0.1f),
                 shape = RoundedCornerShape(12.dp),
-                modifier = Modifier.size(44.dp)
+                modifier = Modifier.size(40.dp)
             ) {
-                Icon(
-                    icon,
-                    contentDescription = null,
-                    tint = GoldenHeritage,
-                    modifier = Modifier.padding(10.dp)
-                )
+                Icon(icon, null, tint = GoldenHeritage, modifier = Modifier.padding(8.dp))
             }
             Spacer(modifier = Modifier.width(16.dp))
             Text(
@@ -154,14 +134,9 @@ fun SettingRow(title: String, icon: ImageVector, onClick: () -> Unit) {
                 modifier = Modifier.weight(1f),
                 fontWeight = FontWeight.SemiBold,
                 fontSize = 15.sp,
-                color = BrownDusk
+                color = if (isDark) Color.White else BrownDusk
             )
-            Icon(
-                imageVector = Icons.Default.ChevronRight,
-                contentDescription = null,
-                tint = Color.LightGray,
-                modifier = Modifier.size(20.dp)
-            )
+            Icon(Icons.Default.ChevronRight, null, tint = Color.LightGray)
         }
     }
 }

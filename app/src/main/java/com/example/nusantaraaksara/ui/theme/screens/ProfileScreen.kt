@@ -2,41 +2,17 @@ package com.example.nusantaraaksara.ui.theme.screens
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.automirrored.filled.ExitToApp
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Email
 import androidx.compose.material.icons.filled.ExitToApp
 import androidx.compose.material.icons.filled.Person
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.CenterAlignedTopAppBar
-import androidx.compose.material3.Divider
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.HorizontalDivider
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -49,13 +25,12 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.nusantaraaksara.R
-import com.example.nusantaraaksara.ui.theme.BrownDusk
-import com.example.nusantaraaksara.ui.theme.EarthySand
-import com.example.nusantaraaksara.ui.theme.GoldenHeritage
+import com.example.nusantaraaksara.ui.theme.*
 import com.example.nusantaraaksara.ui.theme.viewmodel.AuthViewModel
+import com.example.nusantaraaksara.ui.theme.viewmodel.SettingsViewModel
 
-// Definisi Font Poppins
-val Poppins = FontFamily(
+// Re-use Poppins font definition
+val PoppinsProfile = FontFamily(
     Font(R.font.poppins_regular, FontWeight.Normal),
     Font(R.font.poppins_medium, FontWeight.Medium),
     Font(R.font.poppins_semibold, FontWeight.SemiBold),
@@ -66,9 +41,21 @@ val Poppins = FontFamily(
 @Composable
 fun ProfileScreen(
     viewModel: AuthViewModel,
+    settingsViewModel: SettingsViewModel, // Tambahkan parameter ini
     onBackClick: () -> Unit,
     onLogoutSuccess: () -> Unit
 ) {
+    // --- STATE PENGATURAN ---
+    val isDark by settingsViewModel.isDarkMode.collectAsState()
+    val currentLang by settingsViewModel.language.collectAsState()
+
+    // Kamus bahasa sederhana (bisa juga menggunakan IndonesiaStrings/EnglishStrings jika sudah didefinisikan)
+    val titleText = if (currentLang == "id") "Profil Pengguna" else "User Profile"
+    val activeStatus = if (currentLang == "id") "Akun Aktif" else "Active Account"
+    val logoutText = if (currentLang == "id") "KELUAR AKUN" else "LOG OUT"
+    val emailLabel = if (currentLang == "id") "Alamat Email" else "Email Address"
+    val notAvailable = if (currentLang == "id") "Tidak tersedia" else "Not available"
+
     val state by viewModel.state
     val user = state.user
 
@@ -77,8 +64,8 @@ fun ProfileScreen(
             CenterAlignedTopAppBar(
                 title = {
                     Text(
-                        "Profil Pengguna",
-                        fontFamily = Poppins,
+                        text = titleText,
+                        fontFamily = PoppinsProfile,
                         fontWeight = FontWeight.Bold,
                         color = Color.White,
                         fontSize = 20.sp
@@ -86,14 +73,17 @@ fun ProfileScreen(
                 },
                 navigationIcon = {
                     IconButton(onClick = onBackClick) {
-                        Icon(Icons.Default.ArrowBack, contentDescription = "Kembali", tint = Color.White)
+                        Icon(Icons.Default.ArrowBack, contentDescription = null, tint = Color.White)
                     }
                 },
-                colors = TopAppBarDefaults.centerAlignedTopAppBarColors(containerColor = BrownDusk),
+                colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
+                    containerColor = if (isDark) Color(0xFF1A1614) else BrownDusk
+                ),
                 modifier = Modifier.clip(RoundedCornerShape(bottomStart = 28.dp, bottomEnd = 28.dp))
             )
         },
-        containerColor = EarthySand // Tetap menggunakan variabel Anda
+        // Background adaptif
+        containerColor = if (isDark) Color(0xFF121212) else EarthySand
     ) { paddingValues ->
         Column(
             modifier = Modifier
@@ -108,18 +98,19 @@ fun ProfileScreen(
             Card(
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(32.dp),
-                colors = CardDefaults.cardColors(containerColor = Color.White),
-                elevation = CardDefaults.cardElevation(defaultElevation = 8.dp)
+                colors = CardDefaults.cardColors(
+                    containerColor = if (isDark) Color(0xFF1E1E1E) else Color.White
+                ),
+                elevation = CardDefaults.cardElevation(defaultElevation = if (isDark) 0.dp else 8.dp)
             ) {
                 Column(
                     modifier = Modifier.padding(24.dp),
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
-                    // Foto Profil / Inisial
                     Surface(
                         modifier = Modifier.size(110.dp),
                         shape = CircleShape,
-                        color = BrownDusk,
+                        color = if (isDark) Color(0xFF2A2A2A) else BrownDusk,
                         border = BorderStroke(3.dp, GoldenHeritage),
                         shadowElevation = 4.dp
                     ) {
@@ -127,7 +118,7 @@ fun ProfileScreen(
                             Text(
                                 text = user?.username?.take(1)?.uppercase() ?: "?",
                                 fontSize = 48.sp,
-                                fontFamily = Poppins,
+                                fontFamily = PoppinsProfile,
                                 fontWeight = FontWeight.Bold,
                                 color = GoldenHeritage
                             )
@@ -137,39 +128,40 @@ fun ProfileScreen(
                     Spacer(modifier = Modifier.height(16.dp))
 
                     Text(
-                        text = user?.username ?: "Nama Pengguna",
-                        fontFamily = Poppins,
+                        text = user?.username ?: "User",
+                        fontFamily = PoppinsProfile,
                         fontSize = 22.sp,
                         fontWeight = FontWeight.Bold,
-                        color = BrownDusk
+                        color = if (isDark) GoldenHeritage else BrownDusk
                     )
 
                     Text(
                         text = user?.email ?: "email@example.com",
-                        fontFamily = Poppins,
+                        fontFamily = PoppinsProfile,
                         fontSize = 14.sp,
-                        color = Color.Gray,
+                        color = if (isDark) Color.LightGray else Color.Gray,
                         fontWeight = FontWeight.Normal
                     )
 
                     Spacer(modifier = Modifier.height(12.dp))
 
-                    // Badge Status
                     Surface(
                         color = GoldenHeritage.copy(alpha = 0.15f),
                         shape = RoundedCornerShape(12.dp)
                     ) {
                         Text(
-                            text = "Akun Aktif",
+                            text = activeStatus,
                             modifier = Modifier.padding(horizontal = 14.dp, vertical = 6.dp),
                             fontSize = 11.sp,
-                            fontFamily = Poppins,
-                            color = BrownDusk,
+                            fontFamily = PoppinsProfile,
+                            color = if (isDark) GoldenHeritage else BrownDusk,
                             fontWeight = FontWeight.Bold
                         )
                     }
                 }
             }
+
+
 
             Spacer(modifier = Modifier.height(28.dp))
 
@@ -177,24 +169,28 @@ fun ProfileScreen(
             Card(
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(24.dp),
-                colors = CardDefaults.cardColors(containerColor = Color.White),
-                border = BorderStroke(1.dp, Color(0xFFF1F1F1))
+                colors = CardDefaults.cardColors(
+                    containerColor = if (isDark) Color(0xFF1E1E1E) else Color.White
+                ),
+                border = BorderStroke(1.dp, if (isDark) Color.DarkGray else Color(0xFFF1F1F1))
             ) {
                 Column(modifier = Modifier.padding(20.dp)) {
                     ProfileItem(
                         icon = Icons.Default.Person,
                         label = "Username",
-                        value = user?.username ?: "Tidak tersedia"
+                        value = user?.username ?: notAvailable,
+                        isDark = isDark
                     )
                     HorizontalDivider(
                         modifier = Modifier.padding(vertical = 14.dp),
                         thickness = 0.5.dp,
-                        color = EarthySand.copy(alpha = 0.5f)
+                        color = if (isDark) Color.DarkGray else EarthySand.copy(alpha = 0.5f)
                     )
                     ProfileItem(
                         icon = Icons.Default.Email,
-                        label = "Alamat Email",
-                        value = user?.email ?: "Tidak tersedia"
+                        label = emailLabel,
+                        value = user?.email ?: notAvailable,
+                        isDark = isDark
                     )
                 }
             }
@@ -210,15 +206,17 @@ fun ProfileScreen(
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(56.dp),
-                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFB3261E)),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = if (isDark) Color(0xFF8C1D18) else Color(0xFFB3261E)
+                ),
                 shape = RoundedCornerShape(18.dp),
                 elevation = ButtonDefaults.buttonElevation(defaultElevation = 4.dp)
             ) {
                 Icon(Icons.Default.ExitToApp, null, tint = Color.White)
                 Spacer(modifier = Modifier.width(10.dp))
                 Text(
-                    text = "KELUAR AKUN",
-                    fontFamily = Poppins,
+                    text = logoutText,
+                    fontFamily = PoppinsProfile,
                     color = Color.White,
                     fontWeight = FontWeight.Bold,
                     fontSize = 15.sp,
@@ -232,7 +230,7 @@ fun ProfileScreen(
 }
 
 @Composable
-fun ProfileItem(icon: ImageVector, label: String, value: String) {
+fun ProfileItem(icon: ImageVector, label: String, value: String, isDark: Boolean) {
     Row(
         verticalAlignment = Alignment.CenterVertically,
         modifier = Modifier.fillMaxWidth()
@@ -250,16 +248,16 @@ fun ProfileItem(icon: ImageVector, label: String, value: String) {
         Column {
             Text(
                 text = label,
-                fontFamily = Poppins,
+                fontFamily = PoppinsProfile,
                 fontSize = 12.sp,
-                color = Color.Gray,
+                color = if (isDark) Color.Gray else Color.Gray,
                 fontWeight = FontWeight.Medium
             )
             Text(
                 text = value,
-                fontFamily = Poppins,
+                fontFamily = PoppinsProfile,
                 fontSize = 16.sp,
-                color = BrownDusk,
+                color = if (isDark) Color.White else BrownDusk,
                 fontWeight = FontWeight.SemiBold
             )
         }

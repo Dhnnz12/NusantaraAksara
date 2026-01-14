@@ -1,7 +1,5 @@
 package com.example.nusantaraaksara.ui.theme.screens
 
-
-
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -14,16 +12,45 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.Font
+import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.nusantaraaksara.R
 import com.example.nusantaraaksara.ui.theme.BrownDusk
 import com.example.nusantaraaksara.ui.theme.EarthySand
 import com.example.nusantaraaksara.ui.theme.GoldenHeritage
 import com.example.nusantaraaksara.ui.theme.viewmodel.AksaraViewModel
+import com.example.nusantaraaksara.ui.theme.viewmodel.SettingsViewModel
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun AddAksaraScreen(viewModel: AksaraViewModel, onBack: () -> Unit) {
+fun AddAksaraScreen(
+    viewModel: AksaraViewModel,
+    settingsViewModel: SettingsViewModel, // Tambahkan parameter ini
+    onBack: () -> Unit
+) {
+    // --- STATE PENGATURAN ---
+    val isDark by settingsViewModel.isDarkMode.collectAsState()
+    val currentLang by settingsViewModel.language.collectAsState()
+
+    val Poppins = FontFamily(
+        Font(com.example.nusantaraaksara.R.font.poppins_bold, FontWeight.Bold),
+        Font(com.example.nusantaraaksara.R.font.poppins_extra_bold, FontWeight.ExtraBold),
+        Font(R.font.poppins_medium, FontWeight.Medium)
+    )
+    // Kamus lokal untuk layar ini
+    val strings = object {
+        val title = if (currentLang == "id") "Tambah Aksara" else "Add Script"
+        val nameLabel = if (currentLang == "id") "Nama Aksara" else "Script Name"
+        val originLabel = if (currentLang == "id") "Asal Daerah" else "Region of Origin"
+        val imageLabel = if (currentLang == "id") "URL Gambar" else "Image URL"
+        val descLabel = if (currentLang == "id") "Deskripsi" else "Description"
+        val descPlaceholder = if (currentLang == "id") "Tulis deskripsi singkat..." else "Write a short description..."
+        val saveButton = if (currentLang == "id") "SIMPAN AKSARA" else "SAVE SCRIPT"
+    }
+
     var nama by remember { mutableStateOf("") }
     var asal by remember { mutableStateOf("") }
     var deskripsi by remember { mutableStateOf("") }
@@ -34,7 +61,7 @@ fun AddAksaraScreen(viewModel: AksaraViewModel, onBack: () -> Unit) {
             CenterAlignedTopAppBar(
                 title = {
                     Text(
-                        "Tambah Aksara",
+                        text = strings.title,
                         fontFamily = Poppins,
                         fontWeight = FontWeight.Bold,
                         color = Color.White,
@@ -43,14 +70,16 @@ fun AddAksaraScreen(viewModel: AksaraViewModel, onBack: () -> Unit) {
                 },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
-                        Icon(Icons.Default.ArrowBack, contentDescription = "Kembali", tint = Color.White)
+                        Icon(Icons.Default.ArrowBack, contentDescription = null, tint = Color.White)
                     }
                 },
-                colors = TopAppBarDefaults.centerAlignedTopAppBarColors(containerColor = BrownDusk),
+                colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
+                    containerColor = if (isDark) Color(0xFF1A1614) else BrownDusk
+                ),
                 modifier = Modifier.clip(RoundedCornerShape(bottomStart = 24.dp, bottomEnd = 24.dp))
             )
         },
-        containerColor = EarthySand // Menggunakan variabel warna Anda
+        containerColor = if (isDark) Color(0xFF121212) else EarthySand
     ) { padding ->
         Column(
             modifier = Modifier
@@ -64,57 +93,82 @@ fun AddAksaraScreen(viewModel: AksaraViewModel, onBack: () -> Unit) {
             Card(
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(28.dp),
-                colors = CardDefaults.cardColors(containerColor = Color.White),
-                elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+                colors = CardDefaults.cardColors(
+                    containerColor = if (isDark) Color(0xFF1E1E1E) else Color.White
+                ),
+                elevation = CardDefaults.cardElevation(defaultElevation = if (isDark) 0.dp else 4.dp)
             ) {
                 Column(
                     modifier = Modifier.padding(24.dp),
                     verticalArrangement = Arrangement.spacedBy(16.dp)
                 ) {
-                    CustomTextField(value = nama, onValueChange = { nama = it }, label = "Nama Aksara")
-                    CustomTextField(value = asal, onValueChange = { asal = it }, label = "Asal Daerah")
-                    CustomTextField(value = urlGambar, onValueChange = { urlGambar = it }, label = "URL Gambar")
+                    CustomTextField(
+                        value = nama,
+                        onValueChange = { nama = it },
+                        label = strings.nameLabel,
+                        isDark = isDark,
+                        currentLang = currentLang
+                    )
+                    CustomTextField(
+                        value = asal,
+                        onValueChange = { asal = it },
+                        label = strings.originLabel,
+                        isDark = isDark,
+                        currentLang = currentLang
+                    )
+                    CustomTextField(
+                        value = urlGambar,
+                        onValueChange = { urlGambar = it },
+                        label = strings.imageLabel,
+                        isDark = isDark,
+                        currentLang = currentLang
+                    )
 
                     Column {
                         Text(
-                            "Deskripsi",
+                            text = strings.descLabel,
                             fontFamily = Poppins,
                             fontSize = 14.sp,
                             fontWeight = FontWeight.Bold,
-                            color = BrownDusk,
+                            color = if (isDark) GoldenHeritage else BrownDusk,
                             modifier = Modifier.padding(start = 4.dp, bottom = 8.dp)
                         )
                         OutlinedTextField(
                             value = deskripsi,
                             onValueChange = { deskripsi = it },
-                            placeholder = { Text("Tulis deskripsi singkat...", color = Color.LightGray) },
+                            placeholder = { Text(strings.descPlaceholder, color = Color.Gray) },
                             modifier = Modifier.fillMaxWidth().height(150.dp),
                             shape = RoundedCornerShape(16.dp),
-                            textStyle = TextStyle(fontFamily = Poppins),
+                            textStyle = TextStyle(fontFamily = Poppins, color = if (isDark) Color.White else Color.Black),
                             colors = OutlinedTextFieldDefaults.colors(
-                                focusedBorderColor = BrownDusk,
-                                unfocusedBorderColor = Color(0xFFEEEEEE),
-                                focusedContainerColor = Color(0xFFFBFBFB)
+                                focusedBorderColor = if (isDark) GoldenHeritage else BrownDusk,
+                                unfocusedBorderColor = if (isDark) Color.DarkGray else Color(0xFFEEEEEE),
+                                focusedContainerColor = if (isDark) Color(0xFF2A2A2A) else Color(0xFFFBFBFB),
+                                unfocusedContainerColor = if (isDark) Color(0xFF1E1E1E) else Color.White
                             )
                         )
                     }
                 }
             }
 
+
+
             Spacer(modifier = Modifier.height(32.dp))
 
             Button(
                 onClick = { viewModel.tambahAksara(nama, deskripsi, asal, urlGambar) { onBack() } },
                 modifier = Modifier.fillMaxWidth().height(56.dp),
-                colors = ButtonDefaults.buttonColors(containerColor = BrownDusk),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = if (isDark) GoldenHeritage else BrownDusk,
+                    contentColor = if (isDark) BrownDusk else Color.White
+                ),
                 shape = RoundedCornerShape(18.dp),
                 enabled = nama.isNotEmpty() && asal.isNotEmpty(),
                 elevation = ButtonDefaults.buttonElevation(defaultElevation = 4.dp)
             ) {
                 Text(
-                    "SIMPAN AKSARA",
+                    text = strings.saveButton,
                     fontFamily = Poppins,
-                    color = GoldenHeritage,
                     fontWeight = FontWeight.Bold,
                     letterSpacing = 1.sp
                 )
@@ -123,30 +177,43 @@ fun AddAksaraScreen(viewModel: AksaraViewModel, onBack: () -> Unit) {
         }
     }
 }
+
 @Composable
-fun CustomTextField(value: String, onValueChange: (String) -> Unit, label: String) {
+fun CustomTextField(
+    value: String,
+    onValueChange: (String) -> Unit,
+    label: String,
+    isDark: Boolean,
+    currentLang: String
+) {
+    val placeholderPrefix = if (currentLang == "id") "Masukkan" else "Enter"
+    val Poppins = FontFamily(
+        Font(R.font.poppins_bold, FontWeight.Bold),
+        Font(R.font.poppins_extra_bold, FontWeight.ExtraBold),
+        Font(R.font.poppins_medium, FontWeight.Medium)
+    )
     Column {
         Text(
             text = label,
             fontFamily = Poppins,
             fontSize = 14.sp,
             fontWeight = FontWeight.Bold,
-            color = BrownDusk,
+            color = if (isDark) GoldenHeritage else BrownDusk,
             modifier = Modifier.padding(start = 4.dp, bottom = 8.dp)
         )
         OutlinedTextField(
             value = value,
             onValueChange = onValueChange,
-            placeholder = { Text("Masukkan $label", color = Color.LightGray, fontSize = 14.sp) },
+            placeholder = { Text("$placeholderPrefix $label", color = Color.Gray, fontSize = 14.sp) },
             modifier = Modifier.fillMaxWidth(),
             singleLine = true,
             shape = RoundedCornerShape(16.dp),
-            textStyle = TextStyle(fontFamily = Poppins, fontSize = 15.sp),
+            textStyle = TextStyle(fontFamily = Poppins, fontSize = 15.sp, color = if (isDark) Color.White else Color.Black),
             colors = OutlinedTextFieldDefaults.colors(
-                focusedBorderColor = BrownDusk,
-                unfocusedBorderColor = Color(0xFFEEEEEE),
-                focusedContainerColor = Color(0xFFFBFBFB),
-                unfocusedContainerColor = Color.White
+                focusedBorderColor = if (isDark) GoldenHeritage else BrownDusk,
+                unfocusedBorderColor = if (isDark) Color.DarkGray else Color(0xFFEEEEEE),
+                focusedContainerColor = if (isDark) Color(0xFF2A2A2A) else Color(0xFFFBFBFB),
+                unfocusedContainerColor = if (isDark) Color(0xFF1E1E1E) else Color.White
             )
         )
     }

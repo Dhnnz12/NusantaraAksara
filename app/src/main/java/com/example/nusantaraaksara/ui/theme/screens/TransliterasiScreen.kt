@@ -1,40 +1,12 @@
 package com.example.nusantaraaksara.ui.theme.screens
 
-import android.util.Log
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowForward
-import androidx.compose.material.icons.filled.ArrowForward
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Icon
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.OutlinedTextFieldDefaults
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextFieldDefaults
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -48,11 +20,32 @@ import androidx.compose.ui.unit.sp
 import com.example.nusantaraaksara.R
 import com.example.nusantaraaksara.model.Aksara
 import com.example.nusantaraaksara.ui.theme.BrownDusk
+import com.example.nusantaraaksara.ui.theme.GoldenHeritage
 import com.example.nusantaraaksara.ui.theme.components.AksaraDropdown
 import com.example.nusantaraaksara.ui.theme.viewmodel.AksaraViewModel
+import com.example.nusantaraaksara.ui.theme.viewmodel.SettingsViewModel
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun TransliterasiScreen(viewModel: AksaraViewModel, onBack: () -> Unit) {
+fun TransliterasiScreen(
+    viewModel: AksaraViewModel,
+    settingsViewModel: SettingsViewModel, // Tambahkan parameter ini
+    onBack: () -> Unit
+) {
+    // --- STATE PENGATURAN ---
+    val isDark by settingsViewModel.isDarkMode.collectAsState()
+    val currentLang by settingsViewModel.language.collectAsState()
+
+    // Kamus Lokal
+    val strings = object {
+        val title = if (currentLang == "id") "Transliterasi." else "Transliteration."
+        val selectTarget = if (currentLang == "id") "Pilih Aksara Target" else "Select Target Script"
+        val latinText = if (currentLang == "id") "Teks Latin" else "Latin Text"
+        val placeholder = if (currentLang == "id") "Ketik kata di sini..." else "Type words here..."
+        val resultLabel = if (currentLang == "id") "Hasil" else "Result"
+        val emptyHint = if (currentLang == "id") "Ketuk teks latin untuk konversi" else "Type latin text to convert"
+    }
+
     var inputText by remember { mutableStateOf("") }
     val listAksara by viewModel.aksaraList
     var selectedAksara by remember { mutableStateOf<Aksara?>(null) }
@@ -63,28 +56,26 @@ fun TransliterasiScreen(viewModel: AksaraViewModel, onBack: () -> Unit) {
         Font(R.font.poppins_medium, FontWeight.Medium)
     )
 
-    // Gunakan Box agar Header bisa Full mepet ke atas
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color(0xFFFBFBFB))
+            .background(if (isDark) Color(0xFF121212) else Color(0xFFFBFBFB))
     ) {
-        // --- 1. HEADER (Mepet ke Atas & Teks Proporsional) ---
+        // --- 1. HEADER ---
         Surface(
             modifier = Modifier.fillMaxWidth().height(140.dp),
-            color = BrownDusk,
+            color = if (isDark) Color(0xFF1A1614) else BrownDusk,
             shape = RoundedCornerShape(bottomStart = 32.dp, bottomEnd = 32.dp),
             shadowElevation = 8.dp
         ) {
-            // FIX PADDING MERAH: Pastikan tidak ada parameter 'horizontal' jika memakai 'top' secara manual di fungsi yang sama
             Box(
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(start = 24.dp, end = 24.dp, top = 48.dp), // Gunakan start/end menggantikan horizontal
+                    .padding(start = 24.dp, end = 24.dp, top = 48.dp),
                 contentAlignment = Alignment.TopStart
             ) {
                 Text(
-                    text = "Transliterasi.", // Teks baru yang lebih elegan
+                    text = strings.title,
                     color = Color.White,
                     fontSize = 24.sp,
                     fontFamily = Poppins,
@@ -100,18 +91,18 @@ fun TransliterasiScreen(viewModel: AksaraViewModel, onBack: () -> Unit) {
                 .padding(horizontal = 24.dp)
                 .verticalScroll(rememberScrollState())
         ) {
-            // Spacer ini penting agar konten tidak tertutup Header cokelat
             Spacer(modifier = Modifier.height(160.dp))
 
             Text(
-                text = "Pilih Aksara Target",
+                text = strings.selectTarget,
                 fontFamily = Poppins,
                 fontWeight = FontWeight.Bold,
-                color = BrownDusk,
+                color = if (isDark) GoldenHeritage else BrownDusk,
                 fontSize = 15.sp
             )
             Spacer(modifier = Modifier.height(10.dp))
 
+            // Note: Pastikan AksaraDropdown internalnya juga mendukung Dark Mode
             AksaraDropdown(
                 options = listAksara,
                 onSelected = { aksara ->
@@ -124,10 +115,10 @@ fun TransliterasiScreen(viewModel: AksaraViewModel, onBack: () -> Unit) {
             Spacer(modifier = Modifier.height(24.dp))
 
             Text(
-                text = "Teks Latin",
+                text = strings.latinText,
                 fontFamily = Poppins,
                 fontWeight = FontWeight.Bold,
-                color = BrownDusk,
+                color = if (isDark) GoldenHeritage else BrownDusk,
                 fontSize = 15.sp
             )
             Spacer(modifier = Modifier.height(10.dp))
@@ -138,16 +129,17 @@ fun TransliterasiScreen(viewModel: AksaraViewModel, onBack: () -> Unit) {
                     inputText = it
                     viewModel.konversiTeks(it, selectedAksara?.id ?: 1)
                 },
-                placeholder = { Text("Ketik kata di sini...", color = Color.Gray, fontFamily = Poppins) },
+                placeholder = { Text(strings.placeholder, color = Color.Gray, fontFamily = Poppins) },
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(16.dp),
-                // FIX GARIS MERAH: Menggunakan OutlinedTextFieldDefaults.colors()
                 colors = OutlinedTextFieldDefaults.colors(
-                    focusedBorderColor = BrownDusk,
-                    unfocusedBorderColor = Color.LightGray,
-                    focusedContainerColor = Color.White,
-                    unfocusedContainerColor = Color.White,
-                    cursorColor = BrownDusk
+                    focusedBorderColor = if (isDark) GoldenHeritage else BrownDusk,
+                    unfocusedBorderColor = if (isDark) Color.DarkGray else Color.LightGray,
+                    focusedContainerColor = if (isDark) Color(0xFF1E1E1E) else Color.White,
+                    unfocusedContainerColor = if (isDark) Color(0xFF1E1E1E) else Color.White,
+                    focusedTextColor = if (isDark) Color.White else Color.Black,
+                    unfocusedTextColor = if (isDark) Color.White else Color.Black,
+                    cursorColor = if (isDark) GoldenHeritage else BrownDusk
                 ),
                 textStyle = TextStyle(fontFamily = Poppins, fontSize = 16.sp)
             )
@@ -155,10 +147,10 @@ fun TransliterasiScreen(viewModel: AksaraViewModel, onBack: () -> Unit) {
             Spacer(modifier = Modifier.height(30.dp))
 
             Text(
-                text = "Hasil (${selectedAksara?.nama ?: "Aksara"})",
+                text = "${strings.resultLabel} (${selectedAksara?.nama ?: (if(currentLang=="id") "Aksara" else "Script")})",
                 fontFamily = Poppins,
                 fontWeight = FontWeight.ExtraBold,
-                color = BrownDusk,
+                color = if (isDark) GoldenHeritage else BrownDusk,
                 fontSize = 15.sp
             )
             Spacer(modifier = Modifier.height(12.dp))
@@ -168,17 +160,19 @@ fun TransliterasiScreen(viewModel: AksaraViewModel, onBack: () -> Unit) {
                     .fillMaxWidth()
                     .height(200.dp),
                 shape = RoundedCornerShape(24.dp),
-                colors = CardDefaults.cardColors(containerColor = Color.White),
-                elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+                colors = CardDefaults.cardColors(
+                    containerColor = if (isDark) Color(0xFF1E1E1E) else Color.White
+                ),
+                elevation = CardDefaults.cardElevation(defaultElevation = if (isDark) 0.dp else 4.dp)
             ) {
                 Box(
                     contentAlignment = Alignment.Center,
                     modifier = Modifier.fillMaxSize().padding(20.dp)
                 ) {
                     Text(
-                        text = hasil.ifEmpty { "Ketuk teks latin untuk konversi" },
+                        text = hasil.ifEmpty { strings.emptyHint },
                         fontSize = if (hasil.isEmpty()) 14.sp else 34.sp,
-                        color = if (hasil.isEmpty()) Color.LightGray else BrownDusk,
+                        color = if (hasil.isEmpty()) Color.Gray else (if (isDark) Color.White else BrownDusk),
                         fontFamily = Poppins,
                         textAlign = TextAlign.Center,
                         lineHeight = 45.sp
@@ -186,7 +180,6 @@ fun TransliterasiScreen(viewModel: AksaraViewModel, onBack: () -> Unit) {
                 }
             }
 
-            // Jarak tambahan agar tidak mentok di bawah
             Spacer(modifier = Modifier.height(120.dp))
         }
     }

@@ -67,7 +67,7 @@ dependencies {
     implementation(libs.kotlinx.serialization.json)
     implementation(libs.okhttp)
     implementation(libs.okhttp.logging)
-
+    implementation("androidx.datastore:datastore-preferences:1.1.1")
     implementation(platform("androidx.compose:compose-bom:2024.06.00"))
     implementation("androidx.lifecycle:lifecycle-runtime-compose:2.6.2")
     implementation("androidx.compose.material3:material3")
