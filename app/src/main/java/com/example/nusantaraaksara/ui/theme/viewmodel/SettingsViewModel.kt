@@ -5,7 +5,6 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.nusantaraaksara.data.local.PreferenceManager
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.SharingStarted
 
@@ -25,6 +24,7 @@ class SettingsViewModel(private val preferenceManager: PreferenceManager) : View
     fun changeLanguage(lang: String) = viewModelScope.launch {
         preferenceManager.saveLanguage(lang)
     }
+
 
     fun resetDefaults() = viewModelScope.launch {
         preferenceManager.resetToDefault()

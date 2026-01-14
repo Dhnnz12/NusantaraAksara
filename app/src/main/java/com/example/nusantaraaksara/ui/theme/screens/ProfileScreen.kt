@@ -1,7 +1,6 @@
 package com.example.nusantaraaksara.ui.theme.screens
 
 import androidx.compose.foundation.BorderStroke
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -43,7 +42,8 @@ fun ProfileScreen(
     viewModel: AuthViewModel,
     settingsViewModel: SettingsViewModel, // Tambahkan parameter ini
     onBackClick: () -> Unit,
-    onLogoutSuccess: () -> Unit
+    onLogoutSuccess: () -> Unit,
+    onNavigateToChangePassword: () -> Unit
 ) {
     // --- STATE PENGATURAN ---
     val isDark by settingsViewModel.isDarkMode.collectAsState()
