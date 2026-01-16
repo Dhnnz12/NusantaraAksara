@@ -40,190 +40,103 @@ val PoppinsProfile = FontFamily(
 @Composable
 fun ProfileScreen(
     viewModel: AuthViewModel,
-    settingsViewModel: SettingsViewModel, // Tambahkan parameter ini
+    settingsViewModel: SettingsViewModel,
     onBackClick: () -> Unit,
     onLogoutSuccess: () -> Unit,
     onNavigateToChangePassword: () -> Unit
 ) {
-    // --- STATE PENGATURAN ---
     val isDark by settingsViewModel.isDarkMode.collectAsState()
     val currentLang by settingsViewModel.language.collectAsState()
 
-    // Kamus bahasa sederhana (bisa juga menggunakan IndonesiaStrings/EnglishStrings jika sudah didefinisikan)
     val titleText = if (currentLang == "id") "Profil Pengguna" else "User Profile"
-    val activeStatus = if (currentLang == "id") "Akun Aktif" else "Active Account"
-    val logoutText = if (currentLang == "id") "KELUAR AKUN" else "LOG OUT"
+    val logoutText = if (currentLang == "id") "KELUAR" else "LOG OUT"
     val emailLabel = if (currentLang == "id") "Alamat Email" else "Email Address"
-    val notAvailable = if (currentLang == "id") "Tidak tersedia" else "Not available"
 
     val state by viewModel.state
     val user = state.user
 
     Scaffold(
         topBar = {
-            CenterAlignedTopAppBar(
-                title = {
+            // Header dirapatkan menjadi 100.dp
+            Surface(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(100.dp)
+                    .clip(RoundedCornerShape(bottomStart = 28.dp, bottomEnd = 28.dp)),
+                color = if (isDark) Color(0xFF1A1614) else BrownDusk
+            ) {
+                Box(modifier = Modifier.fillMaxSize().padding(horizontal = 12.dp), contentAlignment = Alignment.CenterStart) {
+                    IconButton(onClick = onBackClick) {
+                        Icon(Icons.Default.ArrowBack, contentDescription = null, tint = Color.White)
+                    }
                     Text(
                         text = titleText,
+                        modifier = Modifier.fillMaxWidth(),
+                        textAlign = androidx.compose.ui.text.style.TextAlign.Center,
                         fontFamily = PoppinsProfile,
                         fontWeight = FontWeight.Bold,
                         color = Color.White,
                         fontSize = 20.sp
                     )
-                },
-                navigationIcon = {
-                    IconButton(onClick = onBackClick) {
-                        Icon(Icons.Default.ArrowBack, contentDescription = null, tint = Color.White)
-                    }
-                },
-                colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
-                    containerColor = if (isDark) Color(0xFF1A1614) else BrownDusk
-                ),
-                modifier = Modifier.clip(RoundedCornerShape(bottomStart = 28.dp, bottomEnd = 28.dp))
-            )
+                }
+            }
         },
-        // Background adaptif
         containerColor = if (isDark) Color(0xFF121212) else EarthySand
     ) { paddingValues ->
         Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(paddingValues)
-                .padding(horizontal = 24.dp),
+            modifier = Modifier.fillMaxSize().padding(paddingValues).padding(horizontal = 24.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Spacer(modifier = Modifier.height(32.dp))
 
-            // --- HEADER CARD PROFIL ---
             Card(
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(32.dp),
-                colors = CardDefaults.cardColors(
-                    containerColor = if (isDark) Color(0xFF1E1E1E) else Color.White
-                ),
+                colors = CardDefaults.cardColors(containerColor = if (isDark) Color(0xFF1E1E1E) else Color.White),
                 elevation = CardDefaults.cardElevation(defaultElevation = if (isDark) 0.dp else 8.dp)
             ) {
-                Column(
-                    modifier = Modifier.padding(24.dp),
-                    horizontalAlignment = Alignment.CenterHorizontally
-                ) {
+                Column(modifier = Modifier.padding(24.dp), horizontalAlignment = Alignment.CenterHorizontally) {
                     Surface(
-                        modifier = Modifier.size(110.dp),
+                        modifier = Modifier.size(100.dp),
                         shape = CircleShape,
                         color = if (isDark) Color(0xFF2A2A2A) else BrownDusk,
-                        border = BorderStroke(3.dp, GoldenHeritage),
-                        shadowElevation = 4.dp
+                        border = BorderStroke(3.dp, GoldenHeritage)
                     ) {
                         Box(contentAlignment = Alignment.Center) {
-                            Text(
-                                text = user?.username?.take(1)?.uppercase() ?: "?",
-                                fontSize = 48.sp,
-                                fontFamily = PoppinsProfile,
-                                fontWeight = FontWeight.Bold,
-                                color = GoldenHeritage
-                            )
+                            Text(user?.username?.take(1)?.uppercase() ?: "?", fontSize = 42.sp, fontFamily = PoppinsProfile, fontWeight = FontWeight.Bold, color = GoldenHeritage)
                         }
                     }
-
                     Spacer(modifier = Modifier.height(16.dp))
-
-                    Text(
-                        text = user?.username ?: "User",
-                        fontFamily = PoppinsProfile,
-                        fontSize = 22.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = if (isDark) GoldenHeritage else BrownDusk
-                    )
-
-                    Text(
-                        text = user?.email ?: "email@example.com",
-                        fontFamily = PoppinsProfile,
-                        fontSize = 14.sp,
-                        color = if (isDark) Color.LightGray else Color.Gray,
-                        fontWeight = FontWeight.Normal
-                    )
-
-                    Spacer(modifier = Modifier.height(12.dp))
-
-                    Surface(
-                        color = GoldenHeritage.copy(alpha = 0.15f),
-                        shape = RoundedCornerShape(12.dp)
-                    ) {
-                        Text(
-                            text = activeStatus,
-                            modifier = Modifier.padding(horizontal = 14.dp, vertical = 6.dp),
-                            fontSize = 11.sp,
-                            fontFamily = PoppinsProfile,
-                            color = if (isDark) GoldenHeritage else BrownDusk,
-                            fontWeight = FontWeight.Bold
-                        )
-                    }
+                    Text(user?.username ?: "User", fontFamily = PoppinsProfile, fontSize = 22.sp, fontWeight = FontWeight.Bold, color = if (isDark) GoldenHeritage else BrownDusk)
+                    Text(user?.email ?: "email@example.com", fontFamily = PoppinsProfile, fontSize = 14.sp, color = if (isDark) Color.LightGray else Color.Gray)
                 }
             }
 
+            Spacer(modifier = Modifier.height(24.dp))
 
-
-            Spacer(modifier = Modifier.height(28.dp))
-
-            // --- KARTU INFORMASI DETAIL ---
             Card(
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(24.dp),
-                colors = CardDefaults.cardColors(
-                    containerColor = if (isDark) Color(0xFF1E1E1E) else Color.White
-                ),
-                border = BorderStroke(1.dp, if (isDark) Color.DarkGray else Color(0xFFF1F1F1))
+                colors = CardDefaults.cardColors(containerColor = if (isDark) Color(0xFF1E1E1E) else Color.White)
             ) {
                 Column(modifier = Modifier.padding(20.dp)) {
-                    ProfileItem(
-                        icon = Icons.Default.Person,
-                        label = "Username",
-                        value = user?.username ?: notAvailable,
-                        isDark = isDark
-                    )
-                    HorizontalDivider(
-                        modifier = Modifier.padding(vertical = 14.dp),
-                        thickness = 0.5.dp,
-                        color = if (isDark) Color.DarkGray else EarthySand.copy(alpha = 0.5f)
-                    )
-                    ProfileItem(
-                        icon = Icons.Default.Email,
-                        label = emailLabel,
-                        value = user?.email ?: notAvailable,
-                        isDark = isDark
-                    )
+                    ProfileItem(Icons.Default.Person, "Username", user?.username ?: "-", isDark)
+                    HorizontalDivider(modifier = Modifier.padding(vertical = 12.dp), thickness = 0.5.dp, color = if (isDark) Color.DarkGray else EarthySand.copy(alpha = 0.5f))
+                    ProfileItem(Icons.Default.Email, emailLabel, user?.email ?: "-", isDark)
                 }
             }
 
             Spacer(modifier = Modifier.weight(1f))
-
-            // --- TOMBOL LOGOUT ---
             Button(
-                onClick = {
-                    viewModel.logout()
-                    onLogoutSuccess()
-                },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(56.dp),
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = if (isDark) Color(0xFF8C1D18) else Color(0xFFB3261E)
-                ),
-                shape = RoundedCornerShape(18.dp),
-                elevation = ButtonDefaults.buttonElevation(defaultElevation = 4.dp)
+                onClick = { viewModel.logout(); onLogoutSuccess() },
+                modifier = Modifier.fillMaxWidth().height(56.dp),
+                colors = ButtonDefaults.buttonColors(containerColor = if (isDark) Color(0xFF8C1D18) else Color(0xFFB3261E)),
+                shape = RoundedCornerShape(18.dp)
             ) {
                 Icon(Icons.Default.ExitToApp, null, tint = Color.White)
                 Spacer(modifier = Modifier.width(10.dp))
-                Text(
-                    text = logoutText,
-                    fontFamily = PoppinsProfile,
-                    color = Color.White,
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 15.sp,
-                    letterSpacing = 1.sp
-                )
+                Text(logoutText, fontFamily = PoppinsProfile, fontWeight = FontWeight.Bold)
             }
-
             Spacer(modifier = Modifier.height(32.dp))
         }
     }

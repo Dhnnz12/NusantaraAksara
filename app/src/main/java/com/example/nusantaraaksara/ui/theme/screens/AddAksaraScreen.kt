@@ -8,6 +8,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
@@ -24,23 +25,23 @@ import com.example.nusantaraaksara.ui.theme.GoldenHeritage
 import com.example.nusantaraaksara.ui.theme.viewmodel.AksaraViewModel
 import com.example.nusantaraaksara.ui.theme.viewmodel.SettingsViewModel
 
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AddAksaraScreen(
     viewModel: AksaraViewModel,
-    settingsViewModel: SettingsViewModel, // Tambahkan parameter ini
+    settingsViewModel: SettingsViewModel,
     onBack: () -> Unit
 ) {
-    // --- STATE PENGATURAN ---
     val isDark by settingsViewModel.isDarkMode.collectAsState()
     val currentLang by settingsViewModel.language.collectAsState()
 
     val Poppins = FontFamily(
-        Font(com.example.nusantaraaksara.R.font.poppins_bold, FontWeight.Bold),
-        Font(com.example.nusantaraaksara.R.font.poppins_extra_bold, FontWeight.ExtraBold),
+        Font(R.font.poppins_bold, FontWeight.Bold),
+        Font(R.font.poppins_extra_bold, FontWeight.ExtraBold),
         Font(R.font.poppins_medium, FontWeight.Medium)
     )
-    // Kamus lokal untuk layar ini
+
     val strings = object {
         val title = if (currentLang == "id") "Tambah Aksara" else "Add Script"
         val nameLabel = if (currentLang == "id") "Nama Aksara" else "Script Name"
@@ -48,7 +49,7 @@ fun AddAksaraScreen(
         val imageLabel = if (currentLang == "id") "URL Gambar" else "Image URL"
         val descLabel = if (currentLang == "id") "Deskripsi" else "Description"
         val descPlaceholder = if (currentLang == "id") "Tulis deskripsi singkat..." else "Write a short description..."
-        val saveButton = if (currentLang == "id") "SIMPAN AKSARA" else "SAVE SCRIPT"
+        val saveButton = if (currentLang == "id") "SIMPAN" else "SAVE"
     }
 
     var nama by remember { mutableStateOf("") }
@@ -58,26 +59,32 @@ fun AddAksaraScreen(
 
     Scaffold(
         topBar = {
-            CenterAlignedTopAppBar(
-                title = {
+            // Header dirapatkan tinggi menjadi 100.dp
+            Surface(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(100.dp)
+                    .clip(RoundedCornerShape(bottomStart = 28.dp, bottomEnd = 28.dp)),
+                color = if (isDark) Color(0xFF1A1614) else BrownDusk
+            ) {
+                Box(
+                    modifier = Modifier.fillMaxSize().padding(horizontal = 12.dp),
+                    contentAlignment = Alignment.CenterStart
+                ) {
+                    IconButton(onClick = onBack, modifier = Modifier.align(Alignment.CenterStart)) {
+                        Icon(Icons.Default.ArrowBack, contentDescription = null, tint = Color.White)
+                    }
                     Text(
                         text = strings.title,
+                        modifier = Modifier.fillMaxWidth(),
+                        textAlign = androidx.compose.ui.text.style.TextAlign.Center,
                         fontFamily = Poppins,
                         fontWeight = FontWeight.Bold,
                         color = Color.White,
                         fontSize = 20.sp
                     )
-                },
-                navigationIcon = {
-                    IconButton(onClick = onBack) {
-                        Icon(Icons.Default.ArrowBack, contentDescription = null, tint = Color.White)
-                    }
-                },
-                colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
-                    containerColor = if (isDark) Color(0xFF1A1614) else BrownDusk
-                ),
-                modifier = Modifier.clip(RoundedCornerShape(bottomStart = 24.dp, bottomEnd = 24.dp))
-            )
+                }
+            }
         },
         containerColor = if (isDark) Color(0xFF121212) else EarthySand
     ) { padding ->
@@ -93,43 +100,18 @@ fun AddAksaraScreen(
             Card(
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(28.dp),
-                colors = CardDefaults.cardColors(
-                    containerColor = if (isDark) Color(0xFF1E1E1E) else Color.White
-                ),
+                colors = CardDefaults.cardColors(containerColor = if (isDark) Color(0xFF1E1E1E) else Color.White),
                 elevation = CardDefaults.cardElevation(defaultElevation = if (isDark) 0.dp else 4.dp)
             ) {
-                Column(
-                    modifier = Modifier.padding(24.dp),
-                    verticalArrangement = Arrangement.spacedBy(16.dp)
-                ) {
-                    CustomTextField(
-                        value = nama,
-                        onValueChange = { nama = it },
-                        label = strings.nameLabel,
-                        isDark = isDark,
-                        currentLang = currentLang
-                    )
-                    CustomTextField(
-                        value = asal,
-                        onValueChange = { asal = it },
-                        label = strings.originLabel,
-                        isDark = isDark,
-                        currentLang = currentLang
-                    )
-                    CustomTextField(
-                        value = urlGambar,
-                        onValueChange = { urlGambar = it },
-                        label = strings.imageLabel,
-                        isDark = isDark,
-                        currentLang = currentLang
-                    )
+                Column(modifier = Modifier.padding(24.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
+                    CustomTextField(nama, { nama = it }, strings.nameLabel, isDark, currentLang)
+                    CustomTextField(asal, { asal = it }, strings.originLabel, isDark, currentLang)
+                    CustomTextField(urlGambar, { urlGambar = it }, strings.imageLabel, isDark, currentLang)
 
                     Column {
                         Text(
                             text = strings.descLabel,
-                            fontFamily = Poppins,
-                            fontSize = 14.sp,
-                            fontWeight = FontWeight.Bold,
+                            fontFamily = Poppins, fontSize = 14.sp, fontWeight = FontWeight.Bold,
                             color = if (isDark) GoldenHeritage else BrownDusk,
                             modifier = Modifier.padding(start = 4.dp, bottom = 8.dp)
                         )
@@ -150,28 +132,15 @@ fun AddAksaraScreen(
                     }
                 }
             }
-
-
-
             Spacer(modifier = Modifier.height(32.dp))
-
             Button(
                 onClick = { viewModel.tambahAksara(nama, deskripsi, asal, urlGambar) { onBack() } },
                 modifier = Modifier.fillMaxWidth().height(56.dp),
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = if (isDark) GoldenHeritage else BrownDusk,
-                    contentColor = if (isDark) BrownDusk else Color.White
-                ),
+                colors = ButtonDefaults.buttonColors(containerColor = if (isDark) GoldenHeritage else BrownDusk, contentColor = if (isDark) BrownDusk else Color.White),
                 shape = RoundedCornerShape(18.dp),
-                enabled = nama.isNotEmpty() && asal.isNotEmpty(),
-                elevation = ButtonDefaults.buttonElevation(defaultElevation = 4.dp)
+                enabled = nama.isNotEmpty() && asal.isNotEmpty()
             ) {
-                Text(
-                    text = strings.saveButton,
-                    fontFamily = Poppins,
-                    fontWeight = FontWeight.Bold,
-                    letterSpacing = 1.sp
-                )
+                Text(text = strings.saveButton, fontFamily = Poppins, fontWeight = FontWeight.Bold)
             }
             Spacer(modifier = Modifier.height(24.dp))
         }

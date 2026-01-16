@@ -15,6 +15,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
 import com.example.nusantaraaksara.ui.theme.BrownDusk
 import com.example.nusantaraaksara.ui.theme.GoldenHeritage
@@ -32,7 +33,6 @@ fun SettingsScreen(
     val isDark by settingsViewModel.isDarkMode.collectAsState()
     val currentLang by settingsViewModel.language.collectAsState()
 
-    // --- SINKRONISASI NAMA VARIABEL (Agar tidak Unresolved Reference) ---
     val strings = object {
         val title = if (currentLang == "id") "Pengaturan" else "Settings"
         val accountSection = if (currentLang == "id") "Akun" else "Account"
@@ -46,60 +46,78 @@ fun SettingsScreen(
         val logout = if (currentLang == "id") "Keluar" else "Logout"
     }
 
+    val headerColor = if (isDark) Color(0xFF1A1614) else BrownDusk
+
     Scaffold(
+        containerColor = if (isDark) Color(0xFF121212) else Color(0xFFF8F9FA),
         topBar = {
-            CenterAlignedTopAppBar(
-                title = { Text(strings.title, fontWeight = FontWeight.Bold, color = Color.White) },
-                navigationIcon = {
-                    IconButton(onClick = { navController.popBackStack() }) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, null, tint = Color.White)
-                    }
-                },
-                colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
-                    containerColor = if (isDark) Color(0xFF1A1614) else BrownDusk
+            // Kita gunakan Box sederhana untuk membungkus TopAppBar tanpa padding sistem sama sekali
+            Box(modifier = Modifier.fillMaxWidth()) {
+                CenterAlignedTopAppBar(
+                    title = {
+                        Text(
+                            text = strings.title,
+                            fontWeight = FontWeight.ExtraBold,
+                            color = Color.White,
+                            fontSize = 22.sp
+                        )
+                    },
+                    navigationIcon = {
+                        IconButton(onClick = { navController.popBackStack() }) {
+                            Icon(
+                                imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                                contentDescription = null,
+                                tint = Color.White,
+                                modifier = Modifier.size(28.dp)
+                            )
+                        }
+                    },
+                    colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
+                        containerColor = headerColor // Langsung beri warna di container
+                    ),
+                    // KUNCI UTAMA: Set windowInsets ke 0 agar rapat ke atas layar
+                    windowInsets = WindowInsets(0, 0, 0, 0)
                 )
-            )
-        },
-        containerColor = if (isDark) Color(0xFF121212) else Color(0xFFF8F9FA)
+            }
+        }
     ) { padding ->
         Column(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(padding)
-                .padding(20.dp)
                 .verticalScroll(rememberScrollState())
+                .padding(horizontal = 24.dp)
         ) {
+            Spacer(modifier = Modifier.height(28.dp))
+
             // --- SEKSI AKUN ---
             Text(
                 text = strings.accountSection,
-                fontWeight = FontWeight.Bold,
-                color = if (isDark) GoldenHeritage else BrownDusk
+                fontWeight = FontWeight.ExtraBold,
+                color = if (isDark) GoldenHeritage else BrownDusk,
+                fontSize = 16.sp
             )
+
             SettingRow(
                 title = if (currentLang == "id") "Profil Saya" else "My Profile",
                 icon = Icons.Default.Person,
                 isDark = isDark,
                 onClick = { navController.navigate("profile") }
             )
-            SettingRow(
-                title = if (currentLang == "id") "Ganti Kata Sandi" else "Change Password",
-                icon = Icons.Default.Lock,
-                isDark = isDark,
-                onClick = { navController.navigate("change_password") }
-            )
-
-            Spacer(modifier = Modifier.height(24.dp))
+            Spacer(modifier = Modifier.height(32.dp))
 
             // --- SEKSI PREFERENSI ---
             Text(
                 text = strings.preferenceSection,
-                fontWeight = FontWeight.Bold,
-                color = if (isDark) GoldenHeritage else BrownDusk
+                fontWeight = FontWeight.ExtraBold,
+                color = if (isDark) GoldenHeritage else BrownDusk,
+                fontSize = 16.sp
             )
 
-            // Toggle Mode Gelap
             Row(
-                modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = 12.dp),
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
@@ -107,14 +125,20 @@ fun SettingsScreen(
                     Icon(
                         Icons.Default.DarkMode,
                         null,
-                        tint = if (isDark) GoldenHeritage else BrownDusk
+                        tint = if (isDark) GoldenHeritage else BrownDusk,
+                        modifier = Modifier.size(24.dp)
                     )
-                    Spacer(modifier = Modifier.width(12.dp))
-                    Text(strings.theme, color = if (isDark) Color.White else Color.Black)
+                    Spacer(modifier = Modifier.width(16.dp))
+                    Text(
+                        text = strings.theme,
+                        color = if (isDark) Color.White else Color.Black,
+                        fontSize = 17.sp,
+                        fontWeight = FontWeight.Medium
+                    )
                 }
                 Switch(
                     checked = isDark,
-                    onCheckedChange = { settingsViewModel.toggleTheme(!isDark) }, // Mengirimkan nilai kebalikan
+                    onCheckedChange = { settingsViewModel.toggleTheme(!isDark) },
                     colors = SwitchDefaults.colors(
                         checkedThumbColor = GoldenHeritage,
                         checkedTrackColor = GoldenHeritage.copy(alpha = 0.5f)
@@ -122,7 +146,6 @@ fun SettingsScreen(
                 )
             }
 
-            // Ganti Bahasa
             SettingRow(
                 title = "${strings.language} (${currentLang.uppercase()})",
                 icon = Icons.Default.Language,
@@ -135,28 +158,36 @@ fun SettingsScreen(
 
             SettingRow(title = strings.reset, icon = Icons.Default.Refresh, isDark = isDark)
 
-            Spacer(modifier = Modifier.height(24.dp))
+            Spacer(modifier = Modifier.height(32.dp))
 
             // --- SEKSI APLIKASI ---
             Text(
                 text = strings.appSection,
-                fontWeight = FontWeight.Bold,
-                color = if (isDark) GoldenHeritage else BrownDusk
+                fontWeight = FontWeight.ExtraBold,
+                color = if (isDark) GoldenHeritage else BrownDusk,
+                fontSize = 16.sp
             )
             SettingRow(title = strings.about, icon = Icons.Default.Info, isDark = isDark, onClick = { navController.navigate("about") })
             SettingRow(title = strings.help, icon = Icons.Default.Help, isDark = isDark, onClick = { navController.navigate("help_faq") })
 
-            Spacer(modifier = Modifier.height(40.dp))
+            Spacer(modifier = Modifier.height(48.dp))
 
-            // Tombol Logout
             Button(
                 onClick = onLogout,
-                modifier = Modifier.fillMaxWidth().height(56.dp),
+                modifier = Modifier.fillMaxWidth().height(60.dp),
                 colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFD32F2F)),
-                shape = RoundedCornerShape(16.dp)
+                shape = RoundedCornerShape(18.dp),
+                elevation = ButtonDefaults.buttonElevation(4.dp)
             ) {
-                Text(strings.logout, fontWeight = FontWeight.Bold, color = Color.White)
+                Text(
+                    text = strings.logout.uppercase(),
+                    fontWeight = FontWeight.ExtraBold,
+                    color = Color.White,
+                    letterSpacing = 1.sp
+                )
             }
+
+            Spacer(modifier = Modifier.height(32.dp))
         }
     }
 }
@@ -174,13 +205,29 @@ fun SettingRow(
         modifier = Modifier.fillMaxWidth()
     ) {
         Row(
-            modifier = Modifier.padding(vertical = 12.dp),
+            modifier = Modifier.padding(vertical = 16.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Icon(icon, contentDescription = null, tint = if (isDark) GoldenHeritage else BrownDusk)
-            Spacer(modifier = Modifier.width(12.dp))
-            Text(text = title, color = if (isDark) Color.White else Color.Black, modifier = Modifier.weight(1f))
-            Icon(Icons.Default.ChevronRight, null, tint = Color.Gray)
+            Icon(
+                imageVector = icon,
+                contentDescription = null,
+                tint = if (isDark) GoldenHeritage else BrownDusk,
+                modifier = Modifier.size(24.dp)
+            )
+            Spacer(modifier = Modifier.width(16.dp))
+            Text(
+                text = title,
+                color = if (isDark) Color.White else Color.Black,
+                modifier = Modifier.weight(1f),
+                fontSize = 17.sp,
+                fontWeight = FontWeight.Medium
+            )
+            Icon(
+                imageVector = Icons.Default.ChevronRight,
+                contentDescription = null,
+                tint = Color.Gray.copy(alpha = 0.6f),
+                modifier = Modifier.size(24.dp)
+            )
         }
     }
 }
