@@ -1,19 +1,13 @@
 package com.example.nusantaraaksara.ui.theme.screens
 
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.Person
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Icon
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
+import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -29,8 +23,6 @@ import com.example.nusantaraaksara.ui.theme.BrownDusk
 import com.example.nusantaraaksara.ui.theme.EarthySand
 import com.example.nusantaraaksara.ui.theme.viewmodel.AuthViewModel
 
-// Gunakan FontFamily yang sudah kita buat sebelumnya
-// pastikan val Poppins sudah didefinisikan secara global atau di file ini
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun LoginScreen(
@@ -39,28 +31,32 @@ fun LoginScreen(
     onLoginSuccess: () -> Unit,
     onRegisterClick: () -> Unit
 ) {
-
-    val Poppins = FontFamily( // Ini adalah nama Grupnya
-        Font(R.font.poppins_bold, FontWeight.Bold),             // Anggota 1
-        Font(R.font.poppins_extra_bold, FontWeight.ExtraBold), // Anggota 2
-        Font(R.font.poppins_medium, FontWeight.Medium)         // Anggota 3
+    val Poppins = FontFamily(
+        Font(R.font.poppins_bold, FontWeight.Bold),
+        Font(R.font.poppins_extra_bold, FontWeight.ExtraBold),
+        Font(R.font.poppins_medium, FontWeight.Medium),
+        Font(R.font.poppins_regular, FontWeight.Normal)
     )
+
     val state by viewModel.state
     var username by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
+    var localError by remember { mutableStateOf<String?>(null) }
 
+    // Effect saat login berhasil
     LaunchedEffect(state.isLoginSuccess) {
         if (state.isLoginSuccess) {
-            onLoginSuccess() // Fungsi ini HARUS memanggil navController.navigate("dashboard")
+            onLoginSuccess()
             viewModel.resetAuthState()
         }
     }
+
     Box(
         modifier = Modifier
             .fillMaxSize()
             .background(Color.White)
     ) {
-        // Aksen Atas
+        // Aksen Atas (Header)
         Surface(
             modifier = Modifier
                 .fillMaxWidth()
@@ -68,7 +64,6 @@ fun LoginScreen(
             color = EarthySand.copy(alpha = 0.6f),
             shape = RoundedCornerShape(bottomEnd = 120.dp)
         ) {
-            // Padding di dalam Surface agar teks tidak mepet ke pinggir layar
             Column(
                 modifier = Modifier
                     .fillMaxSize()
@@ -90,51 +85,110 @@ fun LoginScreen(
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(horizontal = 35.dp), // Padding utama sisi kiri & kanan
+                .padding(horizontal = 35.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            // Spacer fleksibel untuk mendorong konten ke bawah Surface
             Spacer(modifier = Modifier.fillMaxHeight(0.45f))
 
+            // Input Nama Pengguna
             OutlinedTextField(
                 value = username,
-                onValueChange = { username = it },
+                onValueChange = {
+                    username = it
+                    localError = null // Reset error saat mengetik
+                },
                 label = { Text("Nama Pengguna", fontFamily = Poppins) },
                 leadingIcon = { Icon(Icons.Default.Person, contentDescription = null) },
                 modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(20.dp)
+                shape = RoundedCornerShape(20.dp),
+                singleLine = true,
+                isError = localError != null || state.error != null
             )
 
             Spacer(modifier = Modifier.height(16.dp))
 
+            // Input Kata Sandi
             OutlinedTextField(
                 value = password,
-                onValueChange = { password = it },
+                onValueChange = {
+                    password = it
+                    localError = null // Reset error saat mengetik
+                },
                 label = { Text("Kata Sandi", fontFamily = Poppins) },
                 leadingIcon = { Icon(Icons.Default.Lock, contentDescription = null) },
                 visualTransformation = PasswordVisualTransformation(),
                 modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(20.dp)
+                shape = RoundedCornerShape(20.dp),
+                singleLine = true,
+                isError = localError != null || state.error != null
             )
+
+            // Area Pesan Error
+            val displayError = localError ?: state.error
+            AnimatedVisibility(visible = displayError != null) {
+                Text(
+                    text = displayError ?: "",
+                    color = Color.Red,
+                    fontSize = 12.sp,
+                    fontFamily = Poppins,
+                    modifier = Modifier.padding(top = 8.dp, start = 4.dp).fillMaxWidth(),
+                    fontWeight = FontWeight.Medium
+                )
+            }
 
             Spacer(modifier = Modifier.height(30.dp))
 
+            // Tombol Login
             Button(
-                onClick = { viewModel.login(username, password) },
+                onClick = {
+                    when {
+                        username.isBlank() -> localError = "Username tidak boleh kosong"
+                        password.isBlank() -> localError = "Password tidak boleh kosong"
+                        else -> viewModel.login(username, password)
+                    }
+                },
                 modifier = Modifier.fillMaxWidth().height(60.dp),
                 shape = RoundedCornerShape(20.dp),
-                colors = ButtonDefaults.buttonColors(containerColor = BrownDusk)
+                colors = ButtonDefaults.buttonColors(containerColor = BrownDusk),
+                enabled = !state.isLoading // Disable saat loading
             ) {
-                Text("Masuk", fontFamily = Poppins, fontWeight = FontWeight.Bold, fontSize = 18.sp)
+                if (state.isLoading) {
+                    CircularProgressIndicator(
+                        color = Color.White,
+                        modifier = Modifier.size(24.dp),
+                        strokeWidth = 2.dp
+                    )
+                } else {
+                    Text(
+                        text = "Masuk",
+                        fontFamily = Poppins,
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 18.sp
+                    )
+                }
             }
 
             Spacer(modifier = Modifier.weight(1f))
 
-            // Footer
-            Row(modifier = Modifier.padding(bottom = 30.dp)) {
-                Text("Belum punya akun?", color = Color.Gray, fontFamily = Poppins)
+            // Footer (Daftar Akun)
+            Row(
+                modifier = Modifier.padding(bottom = 30.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    "Belum punya akun?",
+                    color = Color.Gray,
+                    fontFamily = Poppins,
+                    fontSize = 14.sp
+                )
                 TextButton(onClick = onNavigateToRegister) {
-                    Text("Daftar", color = BrownDusk, fontWeight = FontWeight.Bold, fontFamily = Poppins)
+                    Text(
+                        "Daftar",
+                        color = BrownDusk,
+                        fontWeight = FontWeight.Bold,
+                        fontFamily = Poppins,
+                        fontSize = 14.sp
+                    )
                 }
             }
         }

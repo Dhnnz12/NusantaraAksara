@@ -9,5 +9,6 @@ data class AuthState(
     val isLoginSuccess: Boolean = false,
     val isRegisterSuccess: Boolean = false,
     val errorMessage: String? = null,
-    val token: String? = null
+    val token: String? = null,
+    val error: String? = null // TAMBAHKAN INI AGAR TIDAK MERAH
 )
