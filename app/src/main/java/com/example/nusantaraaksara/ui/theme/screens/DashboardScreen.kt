@@ -1,5 +1,6 @@
 package com.example.nusantaraaksara.ui.theme.screens
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -10,6 +11,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
@@ -18,6 +20,9 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.drawWithContent
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.Font
@@ -41,21 +46,18 @@ import com.example.nusantaraaksara.ui.theme.viewmodel.SettingsViewModel
 fun DashboardScreen(
     aksaraViewModel: AksaraViewModel,
     authViewModel: AuthViewModel,
-    settingsViewModel: SettingsViewModel, // Tambahkan parameter ini
+    settingsViewModel: SettingsViewModel,
     onAksaraClick: (Aksara) -> Unit,
     onAddAksaraClick: () -> Unit,
     onProfileClick: () -> Unit,
     navController: NavHostController,
     onLogout: () -> Unit
 ) {
-    // --- STATE PENGATURAN (BAHASA & TEMA) ---
     val isDark by settingsViewModel.isDarkMode.collectAsState()
     val currentLang by settingsViewModel.language.collectAsState()
-    val strings = if (currentLang == "id") IndonesiaStrings else EnglishStrings
-
     val aksaraState by aksaraViewModel.aksaraList
     val authState by authViewModel.state
-    val userName = authState.user?.username ?: (if (currentLang == "id") "Pengguna" else "User")
+    val userName = authState.user?.username ?: (if (currentLang == "id") "Dhonan" else "User")
 
     val Poppins = FontFamily(
         Font(R.font.poppins_bold, FontWeight.Bold),
@@ -67,76 +69,69 @@ fun DashboardScreen(
         aksaraViewModel.ambilSemuaAksara()
     }
 
-    Scaffold(
-        // Sesuaikan background Scaffold
-        containerColor = if (isDark) Color(0xFF121212) else Color.White,
-        floatingActionButton = {
-            ExtendedFloatingActionButton(
-                onClick = onAddAksaraClick,
-                // FAB berubah warna di Dark Mode agar kontras
-                containerColor = if (isDark) GoldenHeritage else BrownDusk,
-                contentColor = if (isDark) BrownDusk else Color.White,
-                shape = RoundedCornerShape(16.dp),
-                icon = { Icon(Icons.Default.Add, null) },
-                text = {
-                    Text(
-                        if (currentLang == "id") "Tambah" else "Add",
-                        fontFamily = Poppins,
-                        fontWeight = FontWeight.Bold
-                    )
-                }
-            )
-        }
-    ) { innerPadding ->
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(if (isDark) Color(0xFF121212) else Color.White)
-        ) {
-            // --- HEADER ---
+    // Menggunakan Box agar bisa mengontrol koordinat 0,0 (paling ujung atas)
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(if (isDark) Color(0xFF121212) else Color(0xFFFDFBFA))
+    ) {
+        Column(modifier = Modifier.fillMaxSize()) {
+
+            // --- HEADER: WARNA BROWNDUSK RAPAT KE ATAS ---
             Surface(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(140.dp),
-                // Header tetap gelap (BrownDusk) tapi sedikit lebih pekat di Dark Mode
-                color = if (isDark) Color(0xFF1A1614) else BrownDusk,
-                shape = RoundedCornerShape(bottomStart = 32.dp, bottomEnd = 32.dp)
+                modifier = Modifier.fillMaxWidth(),
+                color = BrownDusk,
+                shadowElevation = 4.dp
             ) {
                 Row(
                     modifier = Modifier
-                        .fillMaxSize()
-                        .padding(horizontal = 24.dp)
-                        .padding(top = 20.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.SpaceBetween
+                        .fillMaxWidth()
+                        // MENGHAPUS statusBarsPadding() dan menggantinya dengan padding manual
+                        // top = 12.dp atau 16.dp akan membuat teks "Sugeng Rawuh" sangat rapat ke atas
+                        .padding(start = 24.dp, end = 24.dp, top = 16.dp, bottom = 24.dp),
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Column {
-                        Text(
-                            text = if (currentLang == "id") "Sugeng Rawuh," else "Welcome,",
-                            color = EarthySand.copy(alpha = 0.8f),
-                            fontSize = 12.sp,
-                            fontFamily = Poppins
-                        )
-                        Text(
-                            text = userName,
-                            color = Color.White,
-                            fontSize = 24.sp,
-                            fontWeight = FontWeight.Bold,
-                            fontFamily = Poppins
-                        )
+                    // Profile Icon
+                    Surface(
+                        modifier = Modifier
+                            .size(54.dp)
+                            .clickable { onProfileClick() },
+                        shape = CircleShape,
+                        color = Color.Transparent,
+                        border = BorderStroke(2.dp, GoldenHeritage)
+                    ) {
+                        Box(contentAlignment = Alignment.Center) {
+                            Icon(
+                                imageVector = Icons.Default.Person,
+                                contentDescription = null,
+                                tint = GoldenHeritage,
+                                modifier = Modifier.size(28.dp)
+                            )
+                        }
                     }
 
-                    IconButton(
-                        onClick = onProfileClick,
-                        modifier = Modifier
-                            .background(Color.White.copy(alpha = 0.15f), CircleShape)
-                            .size(45.dp)
-                    ) {
-                        Icon(
-                            Icons.Default.Person,
-                            contentDescription = null,
-                            tint = Color.White
+                    Spacer(modifier = Modifier.width(16.dp))
+
+                    Column {
+                        Text(
+                            text = if (currentLang == "id") "Sugeng Rawuh," else "Welcome Back,",
+                            color = Color.White.copy(alpha = 0.7f),
+                            fontSize = 12.sp,
+                            fontFamily = Poppins,
+                            fontWeight = FontWeight.Medium,
+                            modifier = Modifier.padding(top = 0.dp) // Memastikan tidak ada padding tambahan
                         )
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Text(
+                                text = userName,
+                                color = Color.White,
+                                fontSize = 22.sp,
+                                fontWeight = FontWeight.Bold,
+                                fontFamily = Poppins
+                            )
+                            Spacer(modifier = Modifier.width(6.dp))
+                            Text(text = "📌", fontSize = 18.sp)
+                        }
                     }
                 }
             }
@@ -144,12 +139,7 @@ fun DashboardScreen(
             // --- LIST KONTEN ---
             LazyColumn(
                 modifier = Modifier.fillMaxSize(),
-                contentPadding = PaddingValues(
-                    top = 155.dp,
-                    start = 20.dp,
-                    end = 20.dp,
-                    bottom = innerPadding.calculateBottomPadding() + 80.dp
-                ),
+                contentPadding = PaddingValues(horizontal = 22.dp, vertical = 24.dp),
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
                 item {
@@ -158,8 +148,7 @@ fun DashboardScreen(
                         fontSize = 20.sp,
                         fontFamily = Poppins,
                         fontWeight = FontWeight.ExtraBold,
-                        // Judul berubah menjadi Emas di Dark Mode
-                        color = if (isDark) GoldenHeritage else BrownDusk
+                        color = BrownDusk
                     )
                 }
 
@@ -167,13 +156,34 @@ fun DashboardScreen(
                     AksaraItemCard(
                         aksara = aksara,
                         Poppins = Poppins,
-                        isDark = isDark, // Kirim state dark mode ke card
+                        isDark = isDark,
+                        themeColor = BrownDusk,
                         onClick = { onAksaraClick(aksara) },
                         onDelete = { aksaraViewModel.hapusAksara(aksara.id) }
                     )
                 }
+                item { Spacer(modifier = Modifier.height(100.dp)) }
             }
         }
+
+        // FAB diletakkan manual
+        ExtendedFloatingActionButton(
+            onClick = onAddAksaraClick,
+            modifier = Modifier
+                .align(Alignment.BottomEnd)
+                .padding(24.dp),
+            containerColor = BrownDusk,
+            contentColor = GoldenHeritage,
+            shape = RoundedCornerShape(16.dp),
+            icon = { Icon(Icons.Default.Add, null) },
+            text = {
+                Text(
+                    text = if (currentLang == "id") "Tambah" else "Add",
+                    fontFamily = Poppins,
+                    fontWeight = FontWeight.Bold
+                )
+            }
+        )
     }
 }
 
@@ -181,7 +191,8 @@ fun DashboardScreen(
 fun AksaraItemCard(
     aksara: Aksara,
     Poppins: FontFamily,
-    isDark: Boolean, // Tambahkan parameter isDark
+    isDark: Boolean,
+    themeColor: Color,
     onClick: () -> Unit,
     onDelete: () -> Unit
 ) {
@@ -189,57 +200,63 @@ fun AksaraItemCard(
         modifier = Modifier
             .fillMaxWidth()
             .clickable { onClick() },
-        shape = RoundedCornerShape(20.dp),
-        // Warna kartu berubah di Dark Mode
+        shape = RoundedCornerShape(22.dp),
         colors = CardDefaults.cardColors(
             containerColor = if (isDark) Color(0xFF1E1E1E) else Color.White
         ),
-        elevation = CardDefaults.cardElevation(defaultElevation = if (isDark) 0.dp else 2.dp)
+        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
     ) {
         Row(
             modifier = Modifier.padding(12.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
+            // Image Container
             Surface(
-                shape = RoundedCornerShape(12.dp),
-                color = if (isDark) Color(0xFF2A2A2A) else Color(0xFFF5F5F5),
-                modifier = Modifier.size(60.dp)
+                shape = RoundedCornerShape(16.dp),
+                color = if (isDark) Color(0xFF2A2A2A) else Color(0xFFFDFBFA),
+                modifier = Modifier.size(74.dp)
             ) {
                 AsyncImage(
                     model = aksara.gambar_url,
                     contentDescription = null,
-                    contentScale = ContentScale.Crop
+                    contentScale = ContentScale.Crop,
+                    modifier = Modifier.fillMaxSize()
                 )
             }
+
             Spacer(modifier = Modifier.width(16.dp))
+
             Column(modifier = Modifier.weight(1f)) {
                 Text(
                     text = aksara.nama,
                     fontSize = 17.sp,
                     fontFamily = Poppins,
                     fontWeight = FontWeight.Bold,
-                    color = if (isDark) Color.White else Color.Black // Teks putih di Dark Mode
+                    color = if (isDark) Color.White else themeColor
                 )
                 Text(
                     text = aksara.asal_daerah,
                     fontSize = 13.sp,
                     fontFamily = Poppins,
-                    color = if (isDark) Color.LightGray else Color.Gray
+                    fontWeight = FontWeight.Medium,
+                    color = Color.Gray
                 )
             }
+
+            // Delete Button with subtle background
             IconButton(
                 onClick = onDelete,
                 modifier = Modifier
                     .background(
-                        if (isDark) Color(0xFF331A1A) else Color(0xFFFFF2F2),
-                        CircleShape
+                        color = if (isDark) Color(0xFF331A1A) else Color(0xFFFFEBEE),
+                        shape = CircleShape
                     )
-                    .size(32.dp)
+                    .size(36.dp)
             ) {
                 Icon(
                     Icons.Default.Delete,
                     null,
-                    tint = if (isDark) Color(0xFFFF8080) else Color(0xFFFF5252),
+                    tint = Color(0xFFD32F2F),
                     modifier = Modifier.size(18.dp)
                 )
             }
