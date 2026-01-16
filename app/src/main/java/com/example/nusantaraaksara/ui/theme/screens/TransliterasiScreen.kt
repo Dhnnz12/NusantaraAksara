@@ -29,14 +29,12 @@ import com.example.nusantaraaksara.ui.theme.viewmodel.SettingsViewModel
 @Composable
 fun TransliterasiScreen(
     viewModel: AksaraViewModel,
-    settingsViewModel: SettingsViewModel, // Tambahkan parameter ini
+    settingsViewModel: SettingsViewModel,
     onBack: () -> Unit
 ) {
-    // --- STATE PENGATURAN ---
     val isDark by settingsViewModel.isDarkMode.collectAsState()
     val currentLang by settingsViewModel.language.collectAsState()
 
-    // Kamus Lokal
     val strings = object {
         val title = if (currentLang == "id") "Transliterasi." else "Transliteration."
         val selectTarget = if (currentLang == "id") "Pilih Aksara Target" else "Select Target Script"
@@ -56,30 +54,40 @@ fun TransliterasiScreen(
         Font(R.font.poppins_medium, FontWeight.Medium)
     )
 
+    val headerColor = if (isDark) Color(0xFF1A1614) else BrownDusk
+
     Box(
         modifier = Modifier
             .fillMaxSize()
             .background(if (isDark) Color(0xFF121212) else Color(0xFFFBFBFB))
     ) {
-        // --- 1. HEADER ---
+        // --- 1. HEADER (DIBUAT SANGAT PADAT) ---
         Surface(
-            modifier = Modifier.fillMaxWidth().height(140.dp),
-            color = if (isDark) Color(0xFF1A1614) else BrownDusk,
-            shape = RoundedCornerShape(bottomStart = 32.dp, bottomEnd = 32.dp),
-            shadowElevation = 8.dp
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(120.dp), // Tinggi dikurangi agar tidak ada ruang kosong di bawah teks
+            color = headerColor,
+            shape = RoundedCornerShape(bottomStart = 38.dp)
         ) {
-            Box(
+            Column(
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(start = 24.dp, end = 24.dp, top = 48.dp),
-                contentAlignment = Alignment.TopStart
+                    .padding(start = 28.dp, top = 8.dp), // Padding top sangat kecil agar teks naik mentok
+                verticalArrangement = Arrangement.Center
             ) {
                 Text(
                     text = strings.title,
-                    color = Color.White,
-                    fontSize = 24.sp,
+                    color = GoldenHeritage,
+                    fontSize = 32.sp,
                     fontFamily = Poppins,
-                    fontWeight = FontWeight.Bold
+                    fontWeight = FontWeight.Black,
+                    lineHeight = 32.sp // Memaksa teks tidak mengambil ruang extra
+                )
+                Text(
+                    text = if(currentLang == "id") "Ubah Latin ke Aksara" else "Convert Latin to Script",
+                    color = Color.White.copy(alpha = 0.7f),
+                    fontSize = 14.sp,
+                    fontFamily = Poppins
                 )
             }
         }
@@ -91,8 +99,10 @@ fun TransliterasiScreen(
                 .padding(horizontal = 24.dp)
                 .verticalScroll(rememberScrollState())
         ) {
+            // Spacer diperkecil mengikuti tinggi header yang baru
             Spacer(modifier = Modifier.height(160.dp))
 
+            // ... (Bagian input dan dropdown tetap sama)
             Text(
                 text = strings.selectTarget,
                 fontFamily = Poppins,
@@ -100,9 +110,8 @@ fun TransliterasiScreen(
                 color = if (isDark) GoldenHeritage else BrownDusk,
                 fontSize = 15.sp
             )
-            Spacer(modifier = Modifier.height(10.dp))
+            Spacer(modifier = Modifier.height(12.dp))
 
-            // Note: Pastikan AksaraDropdown internalnya juga mendukung Dark Mode
             AksaraDropdown(
                 options = listAksara,
                 onSelected = { aksara ->
@@ -113,15 +122,6 @@ fun TransliterasiScreen(
             )
 
             Spacer(modifier = Modifier.height(24.dp))
-
-            Text(
-                text = strings.latinText,
-                fontFamily = Poppins,
-                fontWeight = FontWeight.Bold,
-                color = if (isDark) GoldenHeritage else BrownDusk,
-                fontSize = 15.sp
-            )
-            Spacer(modifier = Modifier.height(10.dp))
 
             OutlinedTextField(
                 value = inputText,
@@ -137,50 +137,28 @@ fun TransliterasiScreen(
                     unfocusedBorderColor = if (isDark) Color.DarkGray else Color.LightGray,
                     focusedContainerColor = if (isDark) Color(0xFF1E1E1E) else Color.White,
                     unfocusedContainerColor = if (isDark) Color(0xFF1E1E1E) else Color.White,
-                    focusedTextColor = if (isDark) Color.White else Color.Black,
-                    unfocusedTextColor = if (isDark) Color.White else Color.Black,
-                    cursorColor = if (isDark) GoldenHeritage else BrownDusk
                 ),
                 textStyle = TextStyle(fontFamily = Poppins, fontSize = 16.sp)
             )
 
-            Spacer(modifier = Modifier.height(30.dp))
-
-            Text(
-                text = "${strings.resultLabel} (${selectedAksara?.nama ?: (if(currentLang=="id") "Aksara" else "Script")})",
-                fontFamily = Poppins,
-                fontWeight = FontWeight.ExtraBold,
-                color = if (isDark) GoldenHeritage else BrownDusk,
-                fontSize = 15.sp
-            )
-            Spacer(modifier = Modifier.height(12.dp))
+            Spacer(modifier = Modifier.height(24.dp))
 
             Card(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(200.dp),
+                modifier = Modifier.fillMaxWidth().height(200.dp),
                 shape = RoundedCornerShape(24.dp),
-                colors = CardDefaults.cardColors(
-                    containerColor = if (isDark) Color(0xFF1E1E1E) else Color.White
-                ),
-                elevation = CardDefaults.cardElevation(defaultElevation = if (isDark) 0.dp else 4.dp)
+                colors = CardDefaults.cardColors(containerColor = if (isDark) Color(0xFF1E1E1E) else Color.White),
+                elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
             ) {
-                Box(
-                    contentAlignment = Alignment.Center,
-                    modifier = Modifier.fillMaxSize().padding(20.dp)
-                ) {
+                Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxSize().padding(20.dp)) {
                     Text(
                         text = hasil.ifEmpty { strings.emptyHint },
                         fontSize = if (hasil.isEmpty()) 14.sp else 34.sp,
                         color = if (hasil.isEmpty()) Color.Gray else (if (isDark) Color.White else BrownDusk),
                         fontFamily = Poppins,
-                        textAlign = TextAlign.Center,
-                        lineHeight = 45.sp
+                        textAlign = TextAlign.Center
                     )
                 }
             }
-
-            Spacer(modifier = Modifier.height(120.dp))
         }
     }
 }

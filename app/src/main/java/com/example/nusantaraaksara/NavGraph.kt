@@ -156,7 +156,10 @@ fun NavGraph(
                         settingsViewModel = settingsViewModel, // Pastikan ini ada
                         onAksaraClick = { aksara ->
                             // Simpan data ke savedStateHandle agar bisa diambil di EditScreen
-                            navController.currentBackStackEntry?.savedStateHandle?.set("aksara_data", aksara)
+                            navController.currentBackStackEntry?.savedStateHandle?.set(
+                                "aksara_data",
+                                aksara
+                            )
                             navController.navigate(Screen.DetailAksara.createRoute(aksara.id))
                         },
                         onAddAksaraClick = { navController.navigate("add_aksara") },
@@ -170,6 +173,29 @@ fun NavGraph(
                         }
                     )
                 }
+                // Di dalam NavGraph.kt
+                composable(
+                    route = "detail/{aksaraId}",
+                    arguments = listOf(navArgument("aksaraId") { type = NavType.IntType })
+                ) { backStackEntry ->
+                    val id = backStackEntry.arguments?.getInt("aksaraId") ?: 0
+
+                    DetailScreen(
+                        aksaraId = id,
+                        navController = navController,
+                        viewModel = aksaraViewModel,
+                        settingsViewModel = settingsViewModel,
+                        onBack = {
+                            navController.popBackStack()
+                        },
+                        onEditClick = { dataAksara ->
+                            // Menyimpan data untuk dikirim ke layar Edit
+                            navController.currentBackStackEntry?.savedStateHandle?.set("aksara_data", dataAksara)
+                            navController.navigate("edit/${dataAksara.id}")
+                        }
+                    )
+                }
+
 
                 composable("eksplorasi") {
                     EksplorasiScreen(

@@ -7,9 +7,6 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.ArrowBack
-import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -17,7 +14,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.Font
@@ -32,8 +28,6 @@ import coil.request.ImageRequest
 import com.example.nusantaraaksara.R
 import com.example.nusantaraaksara.model.Aksara
 import com.example.nusantaraaksara.ui.theme.*
-import com.example.nusantaraaksara.ui.theme.utils.EnglishStrings
-import com.example.nusantaraaksara.ui.theme.utils.IndonesiaStrings
 import com.example.nusantaraaksara.ui.theme.viewmodel.AksaraViewModel
 import com.example.nusantaraaksara.ui.theme.viewmodel.SettingsViewModel
 
@@ -41,13 +35,11 @@ import com.example.nusantaraaksara.ui.theme.viewmodel.SettingsViewModel
 @Composable
 fun EksplorasiScreen(
     viewModel: AksaraViewModel,
-    settingsViewModel: SettingsViewModel, // Tambahkan ini
-    onBack: () -> Unit
+    settingsViewModel: SettingsViewModel,
+    onBack: () -> Boolean
 ) {
-    // --- STATE PENGATURAN ---
     val isDark by settingsViewModel.isDarkMode.collectAsState()
     val currentLang by settingsViewModel.language.collectAsState()
-    val strings = if (currentLang == "id") IndonesiaStrings else EnglishStrings
 
     val panduanItems by viewModel.panduanList
     val aksaraList by viewModel.aksaraList
@@ -56,115 +48,92 @@ fun EksplorasiScreen(
     var expandedAksara by remember { mutableStateOf(false) }
     var selectedAksara by remember { mutableStateOf<Aksara?>(null) }
 
-    var showDialog by remember { mutableStateOf(false) }
-    var isEditMode by remember { mutableStateOf(false) }
-    var selectedIdPanduan by remember { mutableStateOf(0) }
-    var karakterTarget by remember { mutableStateOf("") }
-    var fileAnimasi by remember { mutableStateOf("") }
-    var urutanLangkah by remember { mutableStateOf("") }
-
     val Poppins = FontFamily(
         Font(R.font.poppins_bold, FontWeight.Bold),
         Font(R.font.poppins_medium, FontWeight.Medium),
         Font(R.font.poppins_regular, FontWeight.Normal)
     )
 
-    LaunchedEffect(Unit) { viewModel.ambilSemuaAksara() }
-    LaunchedEffect(selectedAksara) { selectedAksara?.let { viewModel.loadPanduan(it.id) } }
+    val bgColor = if (isDark) Color(0xFF121212) else Color.White
+    val headerColor = if (isDark) Color(0xFF1A1614) else BrownDusk
 
     Scaffold(
+        containerColor = bgColor,
         topBar = {
-            CenterAlignedTopAppBar(
-                title = {
+            // HEADER IDENTIK DENGAN TRANSLITERASI (image_123ab0.png)
+            Surface(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(120.dp), // Tinggi dikurangi agar tidak ada ruang kosong di bawah teks
+                color = headerColor,
+                shape = RoundedCornerShape(bottomStart = 38.dp)
+            ) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(start = 28.dp, top = 8.dp), // Padding top sangat kecil agar teks naik mentok
+                    verticalArrangement = Arrangement.Center
+                ) {
                     Text(
-                        text = if (currentLang == "id") "Eksplorasi Aksara" else "Explore Script",
-                        fontFamily = Poppins,
-                        fontWeight = FontWeight.Bold,
-                        fontSize = 20.sp,
-                        color = Color.White
+                        text = if (currentLang == "id") "Eksplorasi." else "Explore.",
+                        color = GoldenHeritage,
+                        fontSize = 32.sp, // Ukuran besar dan tebal sesuai image_12950d.png
+                        fontWeight = FontWeight.Black,
+                        fontFamily = Poppins
                     )
-                },
-                navigationIcon = {
-                    IconButton(onClick = onBack) {
-                        Icon(Icons.Default.ArrowBack, "Back", tint = Color.White)
-                    }
-                },
-                colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
-                    containerColor = if (isDark) Color(0xFF1A1614) else BrownDusk
-                ),
-                modifier = Modifier.clip(RoundedCornerShape(bottomStart = 24.dp, bottomEnd = 24.dp))
-            )
-        },
-        floatingActionButton = {
-            if (selectedAksara != null) {
-                ExtendedFloatingActionButton(
-                    onClick = {
-                        isEditMode = false; karakterTarget = ""; fileAnimasi = ""; urutanLangkah = ""
-                        showDialog = true
-                    },
-                    containerColor = if (isDark) GoldenHeritage else BrownDusk,
-                    contentColor = if (isDark) BrownDusk else Color.White,
-                    shape = RoundedCornerShape(16.dp),
-                    icon = { Icon(Icons.Default.Add, null) },
-                    text = { Text(if (currentLang == "id") "Tambah" else "Add", fontFamily = Poppins) }
-                )
+                    Text(
+                        text = if (currentLang == "id") "Panduan Aksara Nusantara" else "Archipelago Script Guide",
+                        color = Color.White.copy(alpha = 0.7f),
+                        fontSize = 14.sp,
+                        fontFamily = Poppins
+                    )
+                }
             }
-        },
-        containerColor = if (isDark) Color(0xFF121212) else Color(0xFFF8F9FA)
+        }
     ) { innerPadding ->
         Column(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(innerPadding)
-                .padding(horizontal = 20.dp)
                 .verticalScroll(rememberScrollState())
+                .padding(horizontal = 24.dp, vertical = 24.dp)
         ) {
-            Spacer(modifier = Modifier.height(24.dp))
-
+            // LABEL INPUT (Sama seperti "Pilih Aksara Target" di Transliterasi)
             Text(
                 text = if (currentLang == "id") "Pilih Jenis Aksara" else "Select Script Type",
                 fontFamily = Poppins,
-                fontWeight = FontWeight.SemiBold,
-                color = if (isDark) GoldenHeritage else BrownDusk,
-                fontSize = 16.sp
+                fontWeight = FontWeight.Bold,
+                color = BrownDusk,
+                fontSize = 15.sp
             )
+
             Spacer(modifier = Modifier.height(12.dp))
 
+            // DROPDOWN BOX (Sama seperti image_123ab0.png)
             ExposedDropdownMenuBox(
                 expanded = expandedAksara,
                 onExpandedChange = { expandedAksara = !expandedAksara }
             ) {
                 OutlinedTextField(
-                    value = selectedAksara?.nama ?: (if (currentLang == "id") "Pilih Aksara Nusantara" else "Select Archipelago Script"),
+                    value = selectedAksara?.nama ?: (if (currentLang == "id") "Pilih Jenis Aksara" else "Select Script Type"),
                     onValueChange = {},
                     readOnly = true,
                     trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expandedAksara) },
                     modifier = Modifier.menuAnchor().fillMaxWidth(),
                     shape = RoundedCornerShape(16.dp),
                     colors = OutlinedTextFieldDefaults.colors(
-                        focusedBorderColor = if (isDark) GoldenHeritage else BrownDusk,
-                        unfocusedBorderColor = Color.LightGray,
-                        focusedContainerColor = if (isDark) Color(0xFF1E1E1E) else Color.White,
-                        unfocusedContainerColor = if (isDark) Color(0xFF1E1E1E) else Color.White,
-                        focusedTextColor = if (isDark) Color.White else Color.Black,
-                        unfocusedTextColor = if (isDark) Color.White else Color.Black
+                        focusedBorderColor = GoldenHeritage,
+                        unfocusedBorderColor = Color.LightGray
                     ),
-                    textStyle = TextStyle(fontFamily = Poppins)
+                    textStyle = TextStyle(fontFamily = Poppins, fontSize = 14.sp)
                 )
                 ExposedDropdownMenu(
                     expanded = expandedAksara,
-                    onDismissRequest = { expandedAksara = false },
-                    modifier = Modifier.background(if (isDark) Color(0xFF1E1E1E) else Color.White)
+                    onDismissRequest = { expandedAksara = false }
                 ) {
                     aksaraList.forEach { aksara ->
                         DropdownMenuItem(
-                            text = {
-                                Text(
-                                    aksara.nama,
-                                    fontFamily = Poppins,
-                                    color = if (isDark) Color.White else Color.Black
-                                )
-                            },
+                            text = { Text(aksara.nama, fontFamily = Poppins) },
                             onClick = { selectedAksara = aksara; expandedAksara = false }
                         )
                     }
@@ -173,6 +142,7 @@ fun EksplorasiScreen(
 
             Spacer(modifier = Modifier.height(32.dp))
 
+            // KONTEN PANDUAN
             if (selectedAksara == null) {
                 EmptyStateView(Poppins, currentLang, isDark)
             } else if (isLoading) {
@@ -184,135 +154,62 @@ fun EksplorasiScreen(
                     Card(
                         modifier = Modifier.fillMaxWidth().padding(bottom = 20.dp),
                         shape = RoundedCornerShape(28.dp),
-                        colors = CardDefaults.cardColors(
-                            containerColor = if (isDark) Color(0xFF1E1E1E) else Color.White
-                        ),
-                        elevation = CardDefaults.cardElevation(defaultElevation = if (isDark) 0.dp else 2.dp)
+                        colors = CardDefaults.cardColors(containerColor = Color.White),
+                        elevation = CardDefaults.cardElevation(2.dp)
                     ) {
                         Column(modifier = Modifier.padding(20.dp)) {
-                            Row(
-                                modifier = Modifier.fillMaxWidth(),
-                                horizontalArrangement = Arrangement.SpaceBetween,
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                Text(
-                                    text = "${if(currentLang=="id") "Karakter" else "Character"}: ${item.karakterTarget}",
-                                    fontFamily = Poppins,
-                                    fontWeight = FontWeight.Bold,
-                                    fontSize = 18.sp,
-                                    color = if (isDark) GoldenHeritage else BrownDusk
-                                )
-                                Surface(
-                                    color = if (isDark) GoldenHeritage.copy(alpha = 0.2f) else BrownDusk.copy(alpha = 0.1f),
-                                    shape = CircleShape
-                                ) {
-                                    Text(
-                                        text = if (currentLang == "id") "Panduan" else "Guide",
-                                        modifier = Modifier.padding(horizontal = 12.dp, vertical = 4.dp),
-                                        fontSize = 10.sp,
-                                        color = if (isDark) GoldenHeritage else BrownDusk,
-                                        fontWeight = FontWeight.Bold
-                                    )
-                                }
-                            }
-
+                            Text(
+                                text = "${if(currentLang=="id") "Karakter" else "Character"}: ${item.karakterTarget}",
+                                fontFamily = Poppins, fontWeight = FontWeight.Bold, fontSize = 18.sp,
+                                color = BrownDusk
+                            )
                             Spacer(modifier = Modifier.height(16.dp))
-
                             Box(
                                 modifier = Modifier
                                     .fillMaxWidth()
-                                    .height(220.dp)
+                                    .height(200.dp)
                                     .clip(RoundedCornerShape(20.dp))
-                                    .background(if (isDark) Color(0xFF2A2A2A) else Color(0xFFF1F1F1)),
+                                    .background(Color(0xFFF5F5F5)),
                                 contentAlignment = Alignment.Center
                             ) {
                                 AsyncImage(
                                     model = ImageRequest.Builder(LocalContext.current)
                                         .data(item.fileAnimasi)
-                                        .decoderFactory(GifDecoder.Factory()).build(),
+                                        .decoderFactory(GifDecoder.Factory())
+                                        .build(),
                                     contentDescription = null,
-                                    contentScale = ContentScale.Fit,
-                                    modifier = Modifier.size(180.dp)
+                                    modifier = Modifier.size(160.dp)
                                 )
                             }
-
                             Spacer(modifier = Modifier.height(16.dp))
-
                             Text(
                                 text = item.urutanLangkah,
                                 fontFamily = Poppins,
                                 fontSize = 14.sp,
-                                color = if (isDark) Color.LightGray else Color.DarkGray,
+                                color = Color.DarkGray,
                                 lineHeight = 20.sp
                             )
-
-                            HorizontalDivider(
-                                Modifier.padding(vertical = 16.dp),
-                                thickness = 0.5.dp,
-                                color = if (isDark) Color.DarkGray else Color.LightGray
-                            )
-
-                            Row(
-                                modifier = Modifier.fillMaxWidth(),
-                                horizontalArrangement = Arrangement.End,
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                TextButton(onClick = {
-                                    selectedIdPanduan = item.idPanduan; karakterTarget = item.karakterTarget
-                                    fileAnimasi = item.fileAnimasi; urutanLangkah = item.urutanLangkah
-                                    isEditMode = true; showDialog = true
-                                }) {
-                                    Text(
-                                        text = if(currentLang=="id") "Ubah" else "Edit",
-                                        color = if(isDark) GoldenHeritage else BrownDusk,
-                                        fontFamily = Poppins,
-                                        fontWeight = FontWeight.Bold
-                                    )
-                                }
-                                Spacer(modifier = Modifier.width(8.dp))
-                                IconButton(
-                                    onClick = { viewModel.hapusPanduan(item.idPanduan, item.idAksara) },
-                                    modifier = Modifier.background(if(isDark) Color(0xFF3D1C1C) else Color(0xFFFFEBEE), CircleShape).size(36.dp)
-                                ) {
-                                    Icon(Icons.Default.Delete, null, tint = Color.Red, modifier = Modifier.size(18.dp))
-                                }
-                            }
                         }
                     }
                 }
             }
-            Spacer(modifier = Modifier.height(120.dp))
         }
-    }
-
-    if (showDialog) {
-        // Implementasi Dialog juga harus mengikuti tema warna (isDark)
-        // Gunakan strings.save atau strings.back untuk tombol di dalam dialog
     }
 }
 
 @Composable
 fun EmptyStateView(font: FontFamily, lang: String, isDark: Boolean) {
-    Column(
-        modifier = Modifier.fillMaxWidth().padding(top = 60.dp),
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-        Icon(
-            Icons.Default.Info,
-            null,
-            tint = if (isDark) Color.DarkGray else Color.LightGray,
-            modifier = Modifier.size(64.dp)
-        )
-        Spacer(modifier = Modifier.height(16.dp))
+    Column(modifier = Modifier.fillMaxWidth().padding(top = 40.dp), horizontalAlignment = Alignment.CenterHorizontally) {
+        Surface(modifier = Modifier.size(80.dp), shape = CircleShape, color = if (isDark) Color(0xFF1E1E1E) else Color(0xFFF1F1F1)) {
+            Box(contentAlignment = Alignment.Center) {
+                Icon(Icons.Default.Info, null, tint = Color.Gray, modifier = Modifier.size(32.dp))
+            }
+        }
+        Spacer(modifier = Modifier.height(20.dp))
         Text(
-            text = if (lang == "id")
-                "Pilih aksara di atas untuk\nmelihat panduan menulis."
-            else
-                "Select a script above to\nview the writing guide.",
-            color = if (isDark) Color.Gray else Color.Gray,
-            fontFamily = font,
-            textAlign = TextAlign.Center,
-            fontSize = 14.sp
+            text = if (lang == "id") "Pilih aksara di atas untuk\nmulai eksplorasi panduan."
+            else "Select a script above to\nstart exploring guides.",
+            textAlign = TextAlign.Center, color = Color.Gray, fontFamily = font, fontSize = 14.sp
         )
     }
 }

@@ -11,7 +11,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Delete
-import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
@@ -20,8 +19,6 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.drawWithContent
-import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
@@ -35,13 +32,10 @@ import coil.compose.AsyncImage
 import com.example.nusantaraaksara.R
 import com.example.nusantaraaksara.model.Aksara
 import com.example.nusantaraaksara.ui.theme.*
-import com.example.nusantaraaksara.ui.theme.utils.EnglishStrings
-import com.example.nusantaraaksara.ui.theme.utils.IndonesiaStrings
 import com.example.nusantaraaksara.ui.theme.viewmodel.AksaraViewModel
 import com.example.nusantaraaksara.ui.theme.viewmodel.AuthViewModel
 import com.example.nusantaraaksara.ui.theme.viewmodel.SettingsViewModel
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun DashboardScreen(
     aksaraViewModel: AksaraViewModel,
@@ -59,6 +53,11 @@ fun DashboardScreen(
     val authState by authViewModel.state
     val userName = authState.user?.username ?: (if (currentLang == "id") "Dhonan" else "User")
 
+    val currentHeaderColor = if (isDark) Color(0xFF1A1614) else BrownDusk
+    val currentFABColor = if (isDark) Color(0xFF1A1614) else BrownDusk
+    val currentContentColor = if (isDark) GoldenHeritage else GoldenHeritage // Tetap emas agar kontras
+    val titleTextColor = if (isDark) GoldenHeritage else BrownDusk
+
     val Poppins = FontFamily(
         Font(R.font.poppins_bold, FontWeight.Bold),
         Font(R.font.poppins_extra_bold, FontWeight.ExtraBold),
@@ -69,32 +68,31 @@ fun DashboardScreen(
         aksaraViewModel.ambilSemuaAksara()
     }
 
-    // Menggunakan Box agar bisa mengontrol koordinat 0,0 (paling ujung atas)
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(if (isDark) Color(0xFF121212) else Color(0xFFFDFBFA))
+            .background(if (isDark) Color(0xFF121212) else Color(0xFFFBFBFB))
     ) {
         Column(modifier = Modifier.fillMaxSize()) {
 
-            // --- HEADER: WARNA BROWNDUSK RAPAT KE ATAS ---
+            // --- HEADER: POSISI TEKS PROPORSIONAL ---
             Surface(
                 modifier = Modifier.fillMaxWidth(),
-                color = BrownDusk,
-                shadowElevation = 4.dp
+                shape = RoundedCornerShape(bottomStart = 32.dp, bottomEnd = 32.dp),
+                color = currentHeaderColor
             ) {
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        // MENGHAPUS statusBarsPadding() dan menggantinya dengan padding manual
-                        // top = 12.dp atau 16.dp akan membuat teks "Sugeng Rawuh" sangat rapat ke atas
-                        .padding(start = 24.dp, end = 24.dp, top = 16.dp, bottom = 24.dp),
+                        // Kita gunakan padding manual, bukan statusBarsPadding.
+                        // top = 32.dp biasanya adalah jarak ideal agar teks berada tepat di bawah jam/status bar.
+                        .padding(start = 24.dp, end = 24.dp, top = 32.dp, bottom = 24.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     // Profile Icon
                     Surface(
                         modifier = Modifier
-                            .size(54.dp)
+                            .size(50.dp)
                             .clickable { onProfileClick() },
                         shape = CircleShape,
                         color = Color.Transparent,
@@ -105,7 +103,7 @@ fun DashboardScreen(
                                 imageVector = Icons.Default.Person,
                                 contentDescription = null,
                                 tint = GoldenHeritage,
-                                modifier = Modifier.size(28.dp)
+                                modifier = Modifier.size(26.dp)
                             )
                         }
                     }
@@ -118,8 +116,7 @@ fun DashboardScreen(
                             color = Color.White.copy(alpha = 0.7f),
                             fontSize = 12.sp,
                             fontFamily = Poppins,
-                            fontWeight = FontWeight.Medium,
-                            modifier = Modifier.padding(top = 0.dp) // Memastikan tidak ada padding tambahan
+                            fontWeight = FontWeight.Medium
                         )
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             Text(
@@ -136,7 +133,6 @@ fun DashboardScreen(
                 }
             }
 
-            // --- LIST KONTEN ---
             LazyColumn(
                 modifier = Modifier.fillMaxSize(),
                 contentPadding = PaddingValues(horizontal = 22.dp, vertical = 24.dp),
@@ -148,7 +144,7 @@ fun DashboardScreen(
                         fontSize = 20.sp,
                         fontFamily = Poppins,
                         fontWeight = FontWeight.ExtraBold,
-                        color = BrownDusk
+                        color = titleTextColor // PERBAIKAN: Judul berubah warna di mode gelap
                     )
                 }
 
@@ -166,13 +162,13 @@ fun DashboardScreen(
             }
         }
 
-        // FAB diletakkan manual
+        // FAB
         ExtendedFloatingActionButton(
             onClick = onAddAksaraClick,
             modifier = Modifier
                 .align(Alignment.BottomEnd)
                 .padding(24.dp),
-            containerColor = BrownDusk,
+            containerColor = currentFABColor, // PERBAIKAN DI SINI
             contentColor = GoldenHeritage,
             shape = RoundedCornerShape(16.dp),
             icon = { Icon(Icons.Default.Add, null) },
@@ -204,17 +200,16 @@ fun AksaraItemCard(
         colors = CardDefaults.cardColors(
             containerColor = if (isDark) Color(0xFF1E1E1E) else Color.White
         ),
-        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
         Row(
             modifier = Modifier.padding(12.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            // Image Container
             Surface(
                 shape = RoundedCornerShape(16.dp),
-                color = if (isDark) Color(0xFF2A2A2A) else Color(0xFFFDFBFA),
-                modifier = Modifier.size(74.dp)
+                color = if (isDark) Color(0xFF2A2A2A) else Color(0xFFF5F5F5),
+                modifier = Modifier.size(70.dp)
             ) {
                 AsyncImage(
                     model = aksara.gambar_url,
@@ -243,7 +238,6 @@ fun AksaraItemCard(
                 )
             }
 
-            // Delete Button with subtle background
             IconButton(
                 onClick = onDelete,
                 modifier = Modifier
